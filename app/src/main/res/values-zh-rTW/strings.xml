@@ -18,6 +18,13 @@
     <string name="no_results_title">沒有符合的結果</string>
     <string name="no_results_body">換個關鍵字，或清除分類篩選。</string>
     <string name="hint_drag">長按卡片可拖曳排序</string>
+    <string name="category_rename_title">重新命名分類</string>
+    <string name="category_rename_hint">長按分類可修改名稱</string>
+    <string name="category_rename_empty">分類名稱不可為空</string>
+    <string name="category_rename_duplicate">已存在同名分類</string>
+    <string name="category_rename_too_long">分類名稱過長</string>
+    <string name="category_rename_system">此分類不可重新命名</string>
+    <string name="msg_category_renamed">分類已重新命名</string>
 
     <!-- 卡片操作 -->
     <string name="action_open">開啟</string>

@@ -30,6 +30,7 @@ import com.lumobrowser.app.data.Bookmark
 import com.lumobrowser.app.data.BrowserMode
 import com.lumobrowser.app.data.ButtonTexture
 import com.lumobrowser.app.data.CardStyle
+import com.lumobrowser.app.data.CategoryValidator
 import com.lumobrowser.app.data.HapticStrength
 import com.lumobrowser.app.data.CategoryRailPlacement
 import com.lumobrowser.app.data.LayoutMode
@@ -207,6 +208,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onCategorySelected(category: String?) {
         categoryFilter.value = category
+    }
+
+    // ---- category mutations --------------------------------------------------------------
+
+    /**
+     * Renames a category in place.
+     *
+     * The dialog already validates against [CategoryValidator], but the write is re-checked here so
+     * a category can never be renamed to a duplicate or an empty name even if the UI layer is ever
+     * bypassed. The returned [CategoryValidator.Error] tells the dialog what to show inline; `null`
+     * means the rename was accepted and written.
+     *
+     * The write happens through the repository's targeted `UPDATE … SET category = :new WHERE
+     * category = :old`, so the category keeps every bookmark that belongs to it — no bookmark's URL,
+     * title, icon, sort order, pin state or history changes.
+     */
+    fun renameCategory(original: String, rawNew: String): CategoryValidator.Error? {
+        val new = rawNew.trim()
+        val existing = categories.value
+        val error = CategoryValidator.validate(rawNew, original, existing)
+        if (error != null) return error
+        if (new == original) return null
+
+        submit {
+            repository.renameCategory(original, new)
+            if (categoryFilter.value == original) categoryFilter.value = new
+            app.sound.play(SoundCue.Confirm)
+            app.haptics.perform(HapticCue.Success)
+            _message.value = UiMessage.CategoryRenamed
+        }
+        return null
     }
 
     // ---- bookmark mutations --------------------------------------------------------------
@@ -966,6 +998,7 @@ data class AdBlockUpdateState(
 /** Transient banner content; the UI layer resolves each case to a localized string. */
 sealed interface UiMessage {    data object BookmarkSaved : UiMessage
     data object BookmarkUpdated : UiMessage
+    data object CategoryRenamed : UiMessage
     data object Pinned : UiMessage
     data object Unpinned : UiMessage
     data object Restored : UiMessage

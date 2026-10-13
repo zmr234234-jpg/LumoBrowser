@@ -12,7 +12,9 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -129,6 +131,7 @@ fun HomeScreen(
     selectedCategory: String?,
     onQueryChange: (String) -> Unit,
     onCategorySelected: (String?) -> Unit,
+    onCategoryRename: (original: String, new: String) -> Unit,
     onOpen: (Bookmark) -> Unit,
     onAdd: () -> Unit,
     onEdit: (Bookmark) -> Unit,
@@ -157,6 +160,18 @@ fun HomeScreen(
     // back into view: constant motion on a long list, and taps landing on a card that was still
     // invisible. Re-arming on the category filter keeps the transition when the user switches sets.
     val entryTracker = remember(selectedCategory) { EntryAnimationTracker() }
+
+    // Which category (if any) is being renamed. Hoisted here, above the placement branch, so the
+    // dialog survives a rail-placement flip and is the single source of truth for both strips.
+    var renamingCategory by remember { mutableStateOf<String?>(null) }
+
+    val openRename = { category: String ->
+        // System sentinels are never editable. They carry no id of their own, so the guard is the
+        // sentinel value, not the display name — a user category literally named "全部" is untouched.
+        if (category != UNCATEGORISED) {
+            renamingCategory = category
+        }
+    }
 
     // Hoisted out of the item lambda: recomputing these for every card turned a drag into O(n) work
     // on every frame of the gesture.
@@ -241,6 +256,7 @@ fun HomeScreen(
                                 allLabel = s.categoryAll,
                                 uncategorisedLabel = s.categoryUncategorised,
                                 onSelect = onCategorySelected,
+                                onRename = openRename,
                                 // Without an explicit width a `LazyColumn` in a `Row` takes every
                                 // pixel it is offered, the grid is left with none, and the bookmark
                                 // page renders as a black screen with one full-width category entry.
@@ -263,6 +279,7 @@ fun HomeScreen(
                                         context = context,
                                         preferences = preferences,
                                         bookmarks = bookmarks,
+                                        categories = categories,
                                         selectedCategory = selectedCategory,
                                         query = query,
                                         isList = isList,
@@ -296,6 +313,7 @@ fun HomeScreen(
                                 allLabel = s.categoryAll,
                                 uncategorisedLabel = s.categoryUncategorised,
                                 onSelect = onCategorySelected,
+                                onRename = openRename,
                             )
                             BookmarkGrid(
                                 columns = columns,
@@ -308,6 +326,7 @@ fun HomeScreen(
                                         context = context,
                                         preferences = preferences,
                                         bookmarks = bookmarks,
+                                        categories = categories,
                                         selectedCategory = selectedCategory,
                                         query = query,
                                         isList = isList,
@@ -331,6 +350,19 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
+
+            val currentRename = renamingCategory
+            if (currentRename != null) {
+                CategoryRenameDialog(
+                    original = currentRename,
+                    existing = categories,
+                    onSave = { newName ->
+                        onCategoryRename(currentRename, newName)
+                        renamingCategory = null
+                    },
+                    onDismiss = { renamingCategory = null },
+                )
             }
         }
     }
@@ -449,6 +481,7 @@ private fun LazyGridScope.bookContentItems(
     context: android.content.Context,
     preferences: UserPreferences,
     bookmarks: List<Bookmark>,
+    categories: List<String>,
     selectedCategory: String?,
     query: String,
     isList: Boolean,
@@ -806,6 +839,7 @@ private fun CategoryRow(
     allLabel: String,
     uncategorisedLabel: String,
     onSelect: (String?) -> Unit,
+    onRename: (String) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxWidth().padding(top = 12.dp).testTag(TestTags.CATEGORY_ROW)) {
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -831,6 +865,7 @@ private fun CategoryRow(
                     label = category,
                     selected = selected == category,
                     onClick = { onSelect(category) },
+                    onLongClick = { onRename(category) },
                     modifier = Modifier.testTag(TestTags.categoryChip(category)),
                 )
             }
@@ -859,6 +894,7 @@ private fun CategoryRail(
     allLabel: String,
     uncategorisedLabel: String,
     onSelect: (String?) -> Unit,
+    onRename: (String) -> Unit,
     width: Dp,
 ) {
     val feedback = LocalLumoFeedback.current
@@ -917,6 +953,7 @@ private fun CategoryRail(
                 label = category,
                 selected = selected == category,
                 onClick = { onSelect(category) },
+                onLongClick = { onRename(category) },
                 compact = compact,
                 modifier = Modifier.testTag(TestTags.categoryRailItem(category)),
             )
@@ -931,11 +968,13 @@ private fun CategoryRail(
  * both run on the shared UI-transition budget (`navDurationMs`) — the same one the placement switch
  * uses, inside the brief's 120–300 ms band for every preset.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CategoryRailItem(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     compact: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -968,9 +1007,10 @@ private fun CategoryRailItem(
             .heightIn(min = if (compact) 36.dp else LumoMinTouchTarget)
             .clip(RoundedCornerShape(theme.buttonRadius.md))
             .background(background)
-            .clickable(
+            .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = lumoRipple(accent.copy(alpha = 0.18f)),
+                onLongClick = onLongClick,
                 onClick = onClick,
             )
             .padding(horizontal = 6.dp, vertical = 8.dp),

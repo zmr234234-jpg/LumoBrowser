@@ -43,6 +43,13 @@ class LumoStringsSnapshot internal constructor(
     val noResultsTitle get() = LumoStrings.noResultsTitle(context)
     val noResultsBody get() = LumoStrings.noResultsBody(context)
     val dragHint get() = LumoStrings.dragHint(context)
+    val categoryRenameTitle get() = LumoStrings.categoryRenameTitle(context)
+    val categoryRenameHint get() = LumoStrings.categoryRenameHint(context)
+    val categoryRenameEmpty get() = LumoStrings.categoryRenameEmpty(context)
+    val categoryRenameDuplicate get() = LumoStrings.categoryRenameDuplicate(context)
+    val categoryRenameTooLong get() = LumoStrings.categoryRenameTooLong(context)
+    val categoryRenameSystem get() = LumoStrings.categoryRenameSystem(context)
+    val msgCategoryRenamed get() = LumoStrings.msgCategoryRenamed(context)
     fun bookmarkCount(count: Int) = LumoStrings.bookmarkCount(context, count)
 
     // ---------- Card actions ----------

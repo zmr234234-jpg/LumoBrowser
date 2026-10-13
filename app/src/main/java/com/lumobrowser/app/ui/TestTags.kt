@@ -45,6 +45,11 @@ object TestTags {
     fun bookmarkPin(id: Long) = "bookmark-pin-$id"
     fun bookmarkDelete(id: Long) = "bookmark-delete-$id"
     fun categoryChip(name: String) = "category-chip-$name"
+    const val CATEGORY_RENAME_DIALOG = "category-rename-dialog"
+    const val CATEGORY_RENAME_INPUT = "category-rename-input"
+    const val CATEGORY_RENAME_SAVE = "category-rename-save"
+    const val CATEGORY_RENAME_CANCEL = "category-rename-cancel"
+    const val CATEGORY_RENAME_ERROR = "category-rename-error"
 
     const val EDITOR_ROOT = "editor-root"
     const val EDITOR_TITLE_INPUT = "editor-title-input"

@@ -114,6 +114,16 @@ class BookmarkRepository(private val dao: BookmarkDao) {
     /** One-shot read of every bookmark; used to snapshot the collection before a destructive import. */
     suspend fun allOnce(): List<Bookmark> = dao.getAllOnce().map(BookmarkEntity::toDomain)
 
+    /**
+     * Renames a category in place.
+     *
+     * The caller (the ViewModel) is responsible for trimming and validating the new name — the
+     * repository only performs the targeted rewrite so a category keeps every bookmark that belongs
+     * to it. No bookmark's URL, title, icon, sort order, pin state or history is touched.
+     */
+    suspend fun renameCategory(old: String, new: String, now: Long = System.currentTimeMillis()): Int =
+        dao.renameCategory(old, new, now)
+
     companion object {
         const val STEP = 1000L
     }

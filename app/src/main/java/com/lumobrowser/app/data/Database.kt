@@ -192,6 +192,18 @@ interface BookmarkDao {
      */
     @Query("UPDATE bookmarks SET networkAssist = :value, updatedAt = :now WHERE id = :id")
     suspend fun updateNetworkAssist(id: Long, value: String, now: Long)
+
+    /**
+     * Renames a category by rewriting the shared `category` string on every bookmark that carries it.
+     *
+     * Categories have no table or id of their own — a category *is* the `category` string on its
+     * bookmarks ([observeCategories] derives the list from it). Renaming therefore must update the
+     * column in place rather than insert a new category, so every bookmark keeps its id, URL, title,
+     * icon, sort order, pin state and history. Only the display name changes. Returns the number of
+     * bookmarks rewritten (0 means the category did not exist).
+     */
+    @Query("UPDATE bookmarks SET category = :newName, updatedAt = :now WHERE category = :old")
+    suspend fun renameCategory(old: String, newName: String, now: Long): Int
 }
 
 /**

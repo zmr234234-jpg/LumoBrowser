@@ -6,6 +6,36 @@
 
 ---
 
+## 1.10 — versionCode 12
+
+基线是 **v1.09 的源码工程**（`1.09版本/LumoBrowser-v1.09-source.zip` 解出的干净树），本版只做增量：**长按分类按钮原地重命名**，其余交互、音效、触感、动画、无障碍与持久化全部复用 1.09 已有的实现。没有另起工程，没有删除已有功能，没有新增权限，没有改动数据库 schema。
+
+### 一、长按分类按钮，直接修改分类名称
+
+一句话概括：**分类没有自己的表，也没有自己的 id——分类就是 `bookmarks.category` 字符串列**，`observeCategories()` 是 `SELECT DISTINCT category`。因此「重命名」就是一条 targeted UPDATE，天然保留所有书签关联，不需要建表、不需要 schema 迁移（`LumoDatabase` 版本保持 3）。
+
+- 交互：短按分类仍切换筛选（原有行为不变）；长按打开重命名弹窗，`combinedClickable` 保证长按触发后**不会**再执行短按的分类切换。顶部横向栏与左侧竖向栏两处都接上了长按。
+- 弹窗（新增 `ui/CategoryRenameDialog.kt`）：默认填入当前名称，自动聚焦输入框并弹软键盘；提供「保存 / 取消」；取消、按返回键或点击遮罩关闭都不改动原名称；键盘「完成」键走与「保存」完全相同的校验。保存成功后 UI 立即刷新，无需重启。
+- 数据一致性（`data/Database.kt` BookmarkDao + `data/BookmarkRepository.kt`）：`@Query("UPDATE bookmarks SET category = :newName, updatedAt = :now WHERE category = :old")`，返回被改写的书签条数（0 = 分类不存在）。这条 SQL 只改 `category` 字符串，**不动**书签的 id、URL、标题、图标、排序、置顶状态、创建时间与访问历史，也不新建分类替代旧分类、不把所有书签归入当前分类。
+- 校验（新增 `data/CategoryValidator.kt`）：名称不能为空或纯空白（trim 后再判）、自动去除首尾空白、拒绝与其它分类重名、上限 20 个 Unicode 码点（emoji 算 1 个，不是 UTF-16 的 2 个）；支持中文/英文/数字/符号/emoji；输入法组合输入不被截断。校验失败在弹窗内联提示，不静默失败；名称未变化时直接关闭不写库。
+- 特殊分类保护：`UNCATEGORISED` 哨兵（`"\u0000uncategorised"`）按**值**识别，不被误判为用户自建分类；长按它不会打开编辑框。用户自建分类即便恰好叫「全部」，也按值处理、照常可重命名。
+- 双重校验：弹窗先做本地校验，`MainViewModel.renameCategory()` 写入前再校验一次（防御 UI 层被绕过）。写入走已有的 `submit {}` 防重复提交 latch，成功后同步更新 `categoryFilter`（若当前正选中该分类），播 `SoundCue.Confirm` + `HapticCue.Success`，并发出 `UiMessage.CategoryRenamed` 供 Snackbar 显示。
+
+### 二、交互动效、音效、触感、无障碍与持久化
+
+本版**没有新增**任何开关、cue、音频资源或动画预设——需求四/五要求的能力在 1.09 已全部存在，本版复用并接线到重命名动作上：
+
+- 音效/触感开关（`soundEnabled` / `hapticsEnabled`）、音色与强度、`hapticsFollowSound` 均已在设置页「声音与触感」；动画强度（`animationStrength` 0–1）与减弱动效（`reduceMotion`）已在「性能」；关闭后立即生效并持久化到 DataStore。
+- 重命名动作的音效用既有 `SoundCue.Confirm`（同 cue 的触觉映射 `HapticCue.Confirm`/`Success`），不新增音源、不申请录音权限。
+- 选中态动画、弹窗淡入/位移动画、布局切换动画沿用 `MotionConfig`（三档 nav 300/250/140 ms，乘全局强度，强度 0 即时长 0）；「关闭动画」复用 `animationStrength=0` 或 `reduceMotion`，无需新枚举。
+
+### 三、测试与交付
+
+- 新增测试：`BookmarkRepositoryTest` 补 `renameCategoryRewritesEveryBookmarkInPlace`（改写 2 条、逐字段断言 id/url/title/sortOrder/pin/createdAt 不变、分类列表正确）与 `renameCategoryReturnsZeroForUnknownCategory`；新增 `CategoryValidatorTest`（9 例：trim/空/重复/同名 no-op/超长/边界 20/emoji 码点/拉丁数字符号）。
+- 构建与全量单测结果见交付文档；`versionCode 12 / versionName "1.10"`。
+
+---
+
 ## 1.09 — versionCode 11
 
 本版的起点是那份「收藏夹分类栏左侧竖排 + 布局切换开关 + 动画与音效」的需求，随后接上了「返回键要从 WebView 自己的历史恢复」。基线是 **v1.08 的源码工程本身**（`dist/LumoBrowser-v1.08-source.zip` 解出的干净树），不是上一轮的 v1.09 工作树——避免把未经验证的改动带进来。

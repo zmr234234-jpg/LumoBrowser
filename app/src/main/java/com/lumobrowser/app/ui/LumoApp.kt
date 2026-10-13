@@ -201,6 +201,7 @@ fun LumoApp(
             is UiMessage.RestoredCount -> strings.restoredCountMessage(current.count)
             is UiMessage.RestoredWithSkips ->
                 strings.restoredWithSkipsMessage(current.count, current.skipped)
+            is UiMessage.CategoryRenamed -> strings.msgCategoryRenamed
         }
         viewModel.consumeMessage()
         snackbarHostState.showSnackbar(text)
@@ -346,6 +347,7 @@ fun LumoApp(
                     selectedCategory = selectedCategory,
                     onQueryChange = viewModel::onQueryChange,
                     onCategorySelected = viewModel::onCategorySelected,
+                    onCategoryRename = { old, new -> viewModel.renameCategory(old, new) },
                     onOpen = { navController.navigate(Routes.browser(it.url)) },
                     onAdd = { navController.navigate(Routes.editor(0L)) },
                     onEdit = { navController.navigate(Routes.editor(it.id)) },

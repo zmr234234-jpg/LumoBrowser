@@ -41,6 +41,13 @@ object LumoStrings {
     fun noResultsTitle(c: Context) = c.getString(R.string.no_results_title)
     fun noResultsBody(c: Context) = c.getString(R.string.no_results_body)
     fun dragHint(c: Context) = c.getString(R.string.hint_drag)
+    fun categoryRenameTitle(c: Context) = c.getString(R.string.category_rename_title)
+    fun categoryRenameHint(c: Context) = c.getString(R.string.category_rename_hint)
+    fun categoryRenameEmpty(c: Context) = c.getString(R.string.category_rename_empty)
+    fun categoryRenameDuplicate(c: Context) = c.getString(R.string.category_rename_duplicate)
+    fun categoryRenameTooLong(c: Context) = c.getString(R.string.category_rename_too_long)
+    fun categoryRenameSystem(c: Context) = c.getString(R.string.category_rename_system)
+    fun msgCategoryRenamed(c: Context) = c.getString(R.string.msg_category_renamed)
     fun bookmarkCount(c: Context, count: Int): String =
         c.resources.getQuantityString(R.plurals.bookmark_count, count, count)
 

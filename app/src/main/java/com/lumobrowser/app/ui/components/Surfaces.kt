@@ -3,6 +3,7 @@ package com.lumobrowser.app.ui.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.BorderStroke as Stroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -815,6 +816,7 @@ fun LumoDivider(modifier: Modifier = Modifier, alpha: Float = 0.7f) {
 }
 
 /** Selectable chip used for categories and segmented settings choices. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LumoChip(
     label: String,
@@ -822,6 +824,7 @@ fun LumoChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     leading: ImageVector? = null,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val theme = LumoTheme.state
     val style = lumoButtonStyle()
@@ -857,9 +860,10 @@ fun LumoChip(
             // No ripple up here. The chip paints its own on the row below, so the ripple is bounded
             // to the pill instead of to this 48dp-tall touch target - and the pill's shadow, cast
             // on that same row, stays outside the clip. Same split as [LumoIconButton].
-            .clickable(
+            .combinedClickable(
                 interactionSource = interaction,
                 indication = null,
+                onLongClick = onLongClick,
                 onClick = {
                     // A chip is a selection, so it gets the softer toggle cue rather than the
                     // full click.

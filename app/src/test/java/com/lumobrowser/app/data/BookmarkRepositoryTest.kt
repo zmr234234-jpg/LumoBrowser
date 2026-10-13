@@ -162,6 +162,37 @@ class BookmarkRepositoryTest {
     }
 
     @Test
+    fun renameCategoryRewritesEveryBookmarkInPlace() = runTest {
+        val a = repository.add("A", "https://a.example/", "", "Work", false)
+        val b = repository.add("B", "https://b.example/", "", "Reading", false)
+        val c = repository.add("C", "https://c.example/", "", "Work", false)
+        val before = repository.get(a)!!
+
+        val rewritten = repository.renameCategory("Work", "Projects")
+
+        assertEquals(2, rewritten)
+        // Only the category string changes; id, url, title, sort order, pin and history all survive.
+        val afterA = repository.get(a)!!
+        assertEquals("Projects", afterA.category)
+        assertEquals(before.id, afterA.id)
+        assertEquals(before.url, afterA.url)
+        assertEquals(before.title, afterA.title)
+        assertEquals(before.sortOrder, afterA.sortOrder)
+        assertEquals(before.isPinned, afterA.isPinned)
+        assertEquals(before.createdAt, afterA.createdAt)
+        assertEquals("Projects", repository.get(c)!!.category)
+        assertEquals("Reading", repository.get(b)!!.category)
+        assertEquals(listOf("Projects", "Reading"), repository.categories.first())
+    }
+
+    @Test
+    fun renameCategoryReturnsZeroForUnknownCategory() = runTest {
+        repository.add("A", "https://a.example/", "", "Work", false)
+        assertEquals(0, repository.renameCategory("Missing", "Renamed"))
+        assertEquals(listOf("Work"), repository.categories.first())
+    }
+
+    @Test
     fun replaceAllSwapsTheEntireTable() = runTest {
         repository.add("Old", "https://old.example/", "", "", false)
         val before = repository.allOnce()
