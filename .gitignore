@@ -1,0 +1,25 @@
+# --- Android / Gradle build output ---
+*.iml
+.gradle/
+/build/
+/app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+
+# --- Local machine configuration (never commit) ---
+# local.properties holds this machine's SDK path; the repo README shows how to recreate it.
+local.properties
+/keystore.properties
+/keystore/keystore.properties
+
+# --- Signing keys: the repository ships without any, by design ---
+*.jks
+*.keystore
+keystore/
+
+# --- IDE / OS ---
+.idea/
+.DS_Store
+Thumbs.db

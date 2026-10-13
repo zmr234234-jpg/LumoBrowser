@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network policy for the built-in browser.
+
+  Why cleartext is permitted here
+  ===============================
+  LumoBrowser opens whatever address the user saved, and a bookmark may legitimately be an
+  `http://` site. With `android:usesCleartextTraffic="false"` the WebView refuses every such page
+  with `net::ERR_CLEARTEXT_NOT_PERMITTED` before the server is ever contacted, which reaches the
+  user as "this site will not load" and cannot be told apart from a real outage. That is a
+  rendering failure, not a security feature, so it is not the place to enforce HTTPS.
+
+  HTTPS stays the preferred and default path, and it is enforced where it actually matters:
+    * `onReceivedSslError` cancels every certificate error (see LumoWebView.kt). Nothing in this
+      file relaxes certificate validation; it only decides whether an unencrypted connection may
+      be attempted at all.
+    * The browser marks an `http://` page with an explicit insecure-connection warning, so the
+      user always knows the page is not encrypted.
+
+  Why the trust anchors are pinned to `system`
+  ============================================
+  Naming `system` and nothing else means user-installed CA certificates are NOT trusted for this
+  app. Installing a root CA on the device is the standard way to man-in-the-middle one's own
+  traffic, and a browser that silently accepted it would defeat the certificate-error handling
+  above. This matches the platform default for `targetSdk >= 24`; it is written out explicitly so
+  the guarantee survives any future change to that default.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Only the network permission is required: bookmarks and settings stay on-device. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Haptic feedback only; the app never vibrates on scroll or repaint. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
+        VPN support. These three are declared because LumoVpnService is a real VpnService that the
+        user can start; they are not requested at launch and are never requested at all in this
+        build, because no tunnel protocol is implemented (TunnelBackends is empty), so the service
+        always stops itself with TunnelStartResult.NoBackend before it reaches startForeground().
+        Declaring them keeps the manifest honest about what the class does when a backend exists.
+
+        FOREGROUND_SERVICE_SPECIAL_USE, not a VPN type: Android 14's foreground-service types have
+        no VPN member (camera, connectedDevice, dataSync, health, location, mediaPlayback,
+        mediaProjection, microphone, phoneCall, remoteMessaging, shortService, specialUse,
+        systemExempted). specialUse is the platform's answer for a long-running service that does
+        not fit the enumerated list, and a tunnel is exactly that.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
+        Package visibility, for the external-link handoff.
+
+        From Android 11 an app can only resolve packages that this declaration makes visible;
+        everything else is invisible to queryIntentActivities() and resolveActivity(). LumoBrowser
+        uses that lookup for one thing only — whether the confirmation sheet can name the app that
+        will open, or should say "an app you choose" instead — and the entries below are the address
+        kinds it is worth having a name for.
+
+        A web page's "open in the app" banner names an app-specific scheme, and there is no fixed
+        list of those: whatsapp:, taobao:, bilibili:, snssdk1128: and the rest are chosen by whoever
+        wrote the page, so no enumeration covers them. ACTION_VIEW with no <data> is the broadest
+        entry the platform offers, and it is worth being exact about how broad that is: the platform
+        matches this element as an *intent* against each candidate's *intent filter*, and an intent
+        carrying no data only matches a filter that declares no <data> either. So it does not reach
+        the taobao:/whatsapp: handlers — those declare a scheme, which puts them outside it.
+
+        Nothing depends on it reaching them. startActivity() is not filtered by package visibility
+        the way a query is, so a custom-scheme address is still handed to its app; what the filter
+        costs is the app's *name* in the sheet, and the sheet already says "an app you choose" when
+        it cannot tell. The bare entry stays because the filters it does reveal are real, and
+        because the opposite design — a lookup that decides whether to launch — is the failure this
+        version exists to remove.
+
+        This grants no capability. Package visibility is a read of what is installed: it decides
+        whether the confirmation sheet can name the app that will open, and nothing else. The sheet
+        still asks before anything is launched, and LumoBrowser never enumerates installed apps,
+        never shows a picker of its own, and never holds QUERY_ALL_PACKAGES.
+    -->
+    <queries>
+        <!-- Another browser, for the error page's "open in another browser". -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+
+        <!-- Telephone, messaging, mail, maps, app stores: the standard handoffs, named. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="tel" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="sms" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="mailto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="geo" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="market" />
+        </intent>
+
+        <!-- The long tail of app-specific schemes a page can name. See the comment above. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".LumoApplication"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:hardwareAccelerated="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/Theme.LumoBrowser"
+        tools:targetApi="34">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|smallestScreenSize"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.LumoBrowser.Starting">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Opt-in: open http(s) links the user explicitly shares with LumoBrowser. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            The screen shown after a crash.
+
+            Not exported, and there is no intent filter: the only thing that ever launches it is
+            CrashGuard, in this process. It inherits the application theme on purpose - the plain
+            Activity, the resource table and the launch theme are the parts of the app that are known
+            to work even when something else did not, so this screen deliberately uses nothing more.
+
+            restartOnConfigurationChange is left on (unlike MainActivity): this screen holds no state
+            worth preserving across a rotation, and recreating it is cheaper than reasoning about it.
+        -->
+        <activity
+            android:name=".crash.CrashRecoveryActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true" />
+
+        <!--
+            The tunnel service. It carries BIND_VPN_SERVICE, a signature permission held only by the
+            system, which is what actually gates it; exported="true" is required on top of that
+            because the system resolves this component from a different UID to answer
+            VpnService.prepare(), and a non-exported component is invisible to that lookup - the
+            result would be "already authorised" when nothing was, and establish() would then throw.
+
+            No android:process: LumoVpnService publishes through VpnTunnelStatus, a process-scoped
+            StateFlow. Running the service in its own process would silently break that channel
+            (the UI would read a different instance and report Idle forever), so if it ever needs
+            isolating, the status flow has to become a binder or a broadcast first.
+        -->
+        <service
+            android:name=".vpn.LumoVpnService"
+            android:exported="true"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:foregroundServiceType="specialUse">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="VPN tunnel opened at the user's request" />
+        </service>
+
+        <!--
+            The optional accessibility assist service.
+
+            BIND_ACCESSIBILITY_SERVICE is held by the system, which is the real gate: the service
+            only ever runs after the user has ticked LUMO's checkbox in Android's accessibility list,
+            and unticking it stops everything regardless of what LUMO's own switch says.
+
+            No android:process, for the same reason as LumoVpnService: AccessibilityAssistRuntime is
+            a process-scoped StateFlow shared with the UI's arming calls. In a separate process the
+            UI would arm an attempt the service could not see.
+
+            android:exported="true" is required because the system binds this component from its own
+            UID to build the settings entry; BIND_ACCESSIBILITY_SERVICE is what makes that safe.
+
+            Deliberately absent: android:directBootAware (the feature is useless before the user has
+            unlocked, and device-encrypted storage would not be readable anyway) and any intent
+            filter (an accessibility service is started by the system, never by an Intent this app
+            or another one could send).
+        -->
+        <service
+            android:name=".accessibility.LumoAccessibilityService"
+            android:exported="true"
+            android:label="@string/accessibility_assist_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/lumo_accessibility_service" />
+        </service>
+
+        <!--
+            FileProvider used only for sharing a URL as plain text / a backup JSON from the cache dir.
+            file_paths.xml exposes nothing but cache/share, so private databases and settings are never
+            reachable from another app.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- No cloud backup, no analytics, no telemetry components are declared. -->
+    </application>
+
+</manifest>

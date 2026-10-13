@@ -1,0 +1,19 @@
+﻿LumoBrowser v1.09 round 6 - independent cold build of the DELIVERED source zip
+source : D:\deepseek\Website\LumoBrowser-1.08\LumoBrowser\dist\LumoBrowser-v1.09-source.zip
+        (3D2F93808D5D0DA34604534F07B39BC014E414DA05CA43B0BEBFD72D8FFE5F39, 1514163 bytes)
+unpacked OUTSIDE the working tree: D:\deepseek\Website\_zipverify109\LumoBrowser
+only file added: local.properties (sdk.dir=D:\AndroidDev\sdk)
+gradle : D:\AndroidDev\gradle-8.6\bin\gradle.bat --console=plain --offline
+tasks  : :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease
+result : BUILD SUCCESSFUL in 6m 40s (100 actionable tasks: 66 executed, 34 from cache), exit 0
+
+unit tests (app/build/test-results/testDebugUnitTest/*.xml)
+  suites=45  tests=729  failures=0  errors=0  skipped=0   (identical totals to the source tree)
+
+artifacts produced by the cold build
+  app-debug.apk     19552711 bytes   (differs from the delivered 20067046 - see TESTING.md 0H.7:
+                                      debug packaging/zipalign padding, not a content difference)
+  app-release.apk   13199620 bytes   (byte-for-byte the SAME size as the delivered release APK)
+
+This is the claim the delivery rests on: the source zip builds the release APK without anything
+from the authoring tree.

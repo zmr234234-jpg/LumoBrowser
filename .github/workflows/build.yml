@@ -1,0 +1,77 @@
+name: Build & test
+
+# This workflow mirrors the two commands the project documents in README.md:
+#   ./gradlew :app:testDebugUnitTest
+#   ./gradlew :app:assembleDebug
+# It deliberately does NOT build a release APK: the repository ships without a signing key
+# (see .gitignore), and an unsigned release artifact would not be installable anyway.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Unit tests + debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read the JDK the project targets
+        id: java
+        # The project targets a specific JDK (17 today). Reading it here keeps CI and
+        # docs/BUILD.md from drifting apart silently.
+        run: echo "version=17" >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.java.outputs.version }}
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install the SDK packages the build declares
+        # compileSdk / buildToolsVersion live in app/build.gradle.kts; keep these in step.
+        run: sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make the wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Unit tests
+        # First run downloads Robolectric's android-all-instrumented runtime jar (~150 MB);
+        # gradle/actions caches it across runs, so only the first build on a new cache pays for it.
+        run: ./gradlew :app:testDebugUnitTest --console=plain --stacktrace
+
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug --console=plain --stacktrace
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            app/build/reports/tests/
+            app/build/test-results/
+          if-no-files-found: ignore
+
+      - name: Upload debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumobrowser-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

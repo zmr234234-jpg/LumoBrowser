@@ -1,0 +1,157 @@
+# Project-maintained supplement for the bundled ad/tracker filter rules.
+#
+# WHY THIS FILE EXISTS
+#   The upstream snapshot (tools/adblock/upstream-hosts.txt, Peter Lowe's list) is strong on
+#   western ad networks but thin on Chinese ones, and it contains no path rules at all. This
+#   file is the project's own addition: Chinese ad networks, Chinese analytics/tracking
+#   endpoints, and the path fragments that catch ad URLs served from domains that are not
+#   themselves ad domains.
+#
+# HOW TO READ IT
+#   Everything here is hand-maintained, and that is stated plainly in docs/AD_BLOCKING.md —
+#   this file is NOT presented as a complete filter list. Each line is one endpoint whose
+#   only job is advertising, tracking or attribution.
+#
+# RULES FOR ADDING AN ENTRY (do not skip this)
+#   * Add the narrowest host that is actually the ad endpoint. Never add a CDN root that
+#     also serves page content (e.g. `alicdn.com`, `bdstatic.com`, `qpic.cn`, `byteimg.com`).
+#   * Prefer a subdomain (`pos.baidu.com`) over a registrable domain when only the
+#     subdomain is advertising.
+#   * A wrong entry is harmless (it never matches); a too-broad entry is destructive
+#     (it breaks pages). When in doubt, leave it out.
+#   * Path fragments must be at least 4 characters long — the parser drops shorter ones,
+#     because `/a` is a substring of nearly every third-party URL.
+#
+# FORMAT (identical to the bundled rules file)
+#   host              block this host and every subdomain of it
+#   @@host            exception: never block this host, whatever else says otherwise
+#   /path             block third-party requests whose path+query contains this fragment
+#
+# ---------------------------------------------------------------------------
+# [A] Chinese ad networks / ad servers
+# ---------------------------------------------------------------------------
+pos.baidu.com
+cpro.baidu.com
+cbjs.baidu.com
+cbjg.baidu.com
+union.baidu.com
+mobads.baidu.com
+nsclick.baidu.com
+dup.baidustatic.com
+tanx.com
+alimama.com
+alimama.cn
+atanx.alicdn.com
+simba.taobao.com
+adash.m.taobao.com
+adashx.ut.taobao.com
+adashbc.ut.taobao.com
+adash-c.ut.taobao.com
+e.qq.com
+gdt.qq.com
+pingjs.qq.com
+ad.qq.com
+adsview.qq.com
+union.360.cn
+pos.360.cn
+mads.360.cn
+sinaads.sina.com.cn
+ad.sina.com.cn
+hui.sohu.com
+ipinyou.com
+adsame.com
+allyes.com
+chanet.com.cn
+chanet.cn
+adview.cn
+# ---------------------------------------------------------------------------
+# [B] Chinese analytics / tracking / attribution endpoints
+# ---------------------------------------------------------------------------
+hm.baidu.com
+zz.bdstatic.com
+push.zhanzhang.baidu.com
+cnzz.com
+mmstat.com
+umeng.com
+umengcloud.com
+ulogs.umeng.com
+talkingdata.com
+tdstats.com
+irs01.com
+irs01.net
+miaozhen.com
+admaster.com.cn
+cm.admaster.com.cn
+tajs.qq.com
+mta.qq.com
+analytics.163.com
+iad.g.163.com
+g.163.com
+beacon.sina.com.cn
+sax.sina.com.cn
+saxn.sina.com.cn
+saxs.sina.com.cn
+log.sina.com.cn
+51yes.com
+# ---------------------------------------------------------------------------
+# [C] Mobile ad SDK endpoints that also appear in web pages
+# ---------------------------------------------------------------------------
+inmobi.com
+applovin.com
+chartboost.com
+mopub.com
+unityads.unity3d.com
+startappservice.com
+# ---------------------------------------------------------------------------
+# [D] Path fragments (third-party subresources only; never the main document)
+# ---------------------------------------------------------------------------
+/pagead/
+/adserver/
+/adservice
+/adsbygoogle
+/adsense/
+/googleads/
+/popunder
+/adframe
+/banner_ad
+/bannerad
+/ad_banner
+/ad_slot
+/advert/
+/advertisement/
+/prebid
+/openx/
+/gtag/js
+/adcall
+/trackimp
+/adimage
+/adlog.php
+/adclick
+/banners/
+/adserve/
+/adsrv/
+/ad_click
+/banner_ad_
+/sponsor_ad
+# ---------------------------------------------------------------------------
+# [E] Exceptions
+#
+#   These are hosts that upstream blocks but that are load-bearing for ordinary pages:
+#   font/script CDNs, tag managers that also carry consent and analytics code the page
+#   itself needs, payment and CAPTCHA endpoints, and the video player SDK host. Blocking
+#   any of them produces a visibly broken page rather than a page without ads.
+# ---------------------------------------------------------------------------
+@@fonts.googleapis.com
+@@fonts.gstatic.com
+@@ajax.googleapis.com
+@@cdn.jsdelivr.net
+@@cdnjs.cloudflare.com
+@@googletagmanager.com
+@@connect.facebook.net
+@@imasdk.googleapis.com
+@@accounts.google.com
+@@paypal.com
+@@stripe.com
+@@recaptcha.net
+@@hcaptcha.com
+@@gstatic.com

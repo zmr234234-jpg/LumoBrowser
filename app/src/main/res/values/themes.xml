@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Edge-to-edge post-splash theme. Compose supplies all real theming; this exists so the
+         window is dark from the very first frame (no white flash). -->
+    <style name="Theme.LumoBrowser" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/lumo_backdrop</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowContentTransitions">true</item>
+    </style>
+
+    <!--
+        The launch theme: what the system paints between "the user tapped the icon" and "the first
+        Compose frame is on screen".
+
+        Before this existed the activity launched straight into `Theme.LumoBrowser`, whose only
+        visible property is a flat `@color/lumo_backdrop`. So the user got an empty dark rectangle,
+        and only then the in-app startup overlay faded its mark in on top of it — the "black screen
+        before the splash animation" cold start this theme set out to remove. The platform draws the
+        splash window from the moment the process is forked, so the brand mark is now on screen from
+        the first frame the system is able to draw anything at all.
+
+        The parent is the library's `Theme.SplashScreen`, which is the contract
+        `SplashScreen.installSplashScreen()` needs: it resolves `postSplashScreenTheme` from the
+        activity's current theme, and only a descendant of `Theme.SplashScreen` is guaranteed to
+        declare one. On API 31+ it is also what attaches the platform attributes below to the real
+        system splash window.
+
+        `Theme.LumoBrowser` stays the post-splash theme, so the platform tears its splash window down
+        onto exactly the window this app always had.
+
+        See values-night/themes.xml for why the night copy repeats these literal values rather than
+        flipping to a light backdrop.
+    -->
+    <style name="Theme.LumoBrowser.Starting" parent="Theme.SplashScreen">
+        <!-- The brand mark, not a second asset: this is the adaptive launcher icon's own foreground
+             (the orbit ring around the luminous core). The adaptive icon is deliberately NOT
+             referenced here — below API 31 an adaptive icon used as a splash icon is cropped and
+             scaled unpredictably, and pointing at the foreground drawable is the documented
+             workaround for that. -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <!-- Same colour the Compose startup overlay paints as its own backdrop
+             (`LumoThemeState.backgroundBase` is 0xFF06070E in the dark scheme, and this is
+             0xFF06070E), so the system window and the overlay are one continuous surface rather than
+             two dark rectangles that happen to be adjacent. -->
+        <item name="windowSplashScreenBackground">@color/lumo_backdrop</item>
+        <!-- Length of the ICON's exit animation, not how long the splash stays up: that is decided by
+             when the activity's first frame is ready (the library's own docs are explicit that this
+             attribute has no impact on dwell time, and `setKeepOnScreenCondition` is the tool for
+             that — deliberately not used here, because gating the first frame behind anything is the
+             failure mode this app has already shipped once).
+
+             Zero, so the launch window hands the screen over instead of animating it away. The value
+             used to be 400 ms, and that was the wrong half of the hand-off to animate: the Compose
+             overlay now draws this same mark, at this same place, on this same colour, from its very
+             first frame (see StartupAnimation.kt), so a platform exit animation would fade the mark
+             out and then the app would draw it again — the mark playing twice, which is the one thing
+             the brief rules out. With no exit animation the swap is invisible by construction: a
+             static mark on `@color/lumo_backdrop` is replaced by the same static mark on the same
+             colour. -->
+        <item name="windowSplashScreenAnimationDuration">0</item>
+        <!-- Applied by installSplashScreen() before setContent, which is what makes the activity
+             come out the other side as the ordinary app theme. -->
+        <item name="postSplashScreenTheme">@style/Theme.LumoBrowser</item>
+        <!-- The parent's `android:windowBackground` is part of its compat splash machinery. Below
+             API 31 that drawable is the launch window the user actually stares at, so it is placed
+             back on the same backdrop colour the Compose overlay will paint: an API 26–30 device
+             gets a solid dark launch window with the mark centred in it, and the hand-off to the
+             overlay is a continuation instead of a colour change. On API 31+ the platform attrs
+             above win and this is only the window background the activity starts with. -->
+        <item name="android:windowBackground">@color/lumo_backdrop</item>
+    </style>
+</resources>

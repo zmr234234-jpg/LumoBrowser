@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Night-mode copies of the two launch themes.
+
+    A note on why these are literal copies of values/themes.xml rather than a light-mode variant:
+    LumoBrowser's default look is dark (科技风) and is resolved in Compose from the user's own
+    preference, not from the system uiMode. `buildLumoTheme` returns the dark scheme for the shipped
+    default, so the Compose startup overlay paints `LumoThemeState.backgroundBase` = 0xFF06070E —
+    literally `@color/lumo_backdrop` — on a light-mode device as well. Flipping the launch window to
+    a light backdrop here would therefore mismatch the overlay it hands off to and reintroduce a
+    visible flash, just in the opposite direction. Both configurations therefore keep the single
+    existing `lumo_backdrop` colour that the app's own window already used.
+
+    What the directory does buy, and the reason it exists rather than being omitted: with a
+    `values-night` present, the night variant of the launch theme is stated explicitly instead of
+    being inherited by accident from the library's `Theme.SplashScreen` →
+    `Base.v21.Theme.SplashScreen` (a `android:Theme.DeviceDefault.NoActionBar`),
+    whose `?android:colorBackground` and compat splash drawable are NOT guaranteed dark. That is the
+    failure this file forecloses: the launch window of a dark app rendering light because the splash
+    theme's own defaults were never overridden in night mode.
+-->
+<resources>
+    <style name="Theme.LumoBrowser" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/lumo_backdrop</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowContentTransitions">true</item>
+    </style>
+
+    <style name="Theme.LumoBrowser.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenBackground">@color/lumo_backdrop</item>
+        <!-- See values/themes.xml: zero, so the launch window hands over to the Compose overlay's
+             own copy of this mark rather than fading it out first. -->
+        <item name="windowSplashScreenAnimationDuration">0</item>
+        <item name="postSplashScreenTheme">@style/Theme.LumoBrowser</item>
+        <item name="android:windowBackground">@color/lumo_backdrop</item>
+    </style>
+</resources>

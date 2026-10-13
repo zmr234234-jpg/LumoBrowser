@@ -1,0 +1,19 @@
+﻿LumoBrowser v1.09 round 6 - full verification build
+tree   : D:\deepseek\Website\LumoBrowser-1.08\LumoBrowser
+gradle : D:\AndroidDev\gradle-8.6\bin\gradle.bat --console=plain --offline
+tasks  : :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease
+result : BUILD SUCCESSFUL in 2m 6s (100 actionable tasks: 24 executed, 76 up-to-date), exit 0
+
+unit tests (app/build/test-results/testDebugUnitTest/*.xml)
+  suites=45  tests=729  failures=0  errors=0  skipped=0
+
+artifacts
+  app/build/outputs/apk/debug/app-debug.apk        20067046 bytes
+  app/build/outputs/apk/release/app-release.apk    13199620 bytes
+
+version (aapt2 dump badging, from the earlier build of this same source)
+  release: package com.lumobrowser.app  versionCode=11  versionName=1.09
+  debug  : package com.lumobrowser.app.debug  versionCode=11  versionName=1.09-debug
+  signing: CN=LumoBrowser, OU=Personal, O=LumoBrowser, L=Unknown, ST=Unknown, C=CN
+           SHA-256 4beb5163cf904e663d73bfe4dbf3b75f853a484799ccd247426a8e20bbbb75a9
+           (same certificate as 1.07 / 1.08, so the release APK installs over them)

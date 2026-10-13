@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="lumo_backdrop">#FF06070E</color>
+    <color name="lumo_surface">#FF0B0E18</color>
+    <color name="lumo_accent">#FF35E0F0</color>
+    <color name="lumo_accent_secondary">#FF8B7CFF</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <!--
+        The crash recovery screen.
+
+        Two text colours rather than the app's theme attributes: that screen is built from platform
+        views precisely so that it does not depend on the Compose theme resolving, and reading its
+        colours out of the theme it is trying to be independent of would put the dependency back.
+    -->
+    <color name="lumo_recovery_text">#FFE8ECF6</color>
+    <color name="lumo_recovery_text_muted">#FF98A2B8</color>
+</resources>

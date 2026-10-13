@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  LUMO's accessibility assist service configuration.
+
+  Every attribute here is the narrowest value that still lets the user's one declared button be
+  found. The service also sets these fields in `onServiceConnected`; they are duplicated in XML
+  because Android reads this file when it builds the entry shown in the accessibility settings list,
+  and a service that declares nothing there is listed with no explanation of what it does.
+
+  Deliberately absent, with the reason each one is a capability LUMO has no use for:
+
+    * `flagRetrieveInteractiveWindows` — would expose every window the system holds, not just the
+      one the user is looking at. The service already reads `rootInActiveWindow`, which is exactly
+      the window on screen and nothing else.
+    * `flagRequestFilterKeyEvents` — would deliver every keystroke in every app. The feature presses
+      one named button; it has never needed to know what anyone typed.
+    * `flagRequestTouchExplorationMode` — changes how the whole device handles touch, for a service
+      whose entire job is one synthetic click.
+    * `flagRequestAccessibilityButton` — would add a LUMO tile to the navigation bar, which is
+      another always-present surface for a feature that is off by default and used rarely.
+    * `flagIncludeNotImportantViews` — adds more nodes to walk per event, in exchange for candidates
+      accessibility itself has already judged not worth announcing. The cost is real; the benefit is
+      a button the user could not find either.
+
+  `accessibilityFlags` intentionally carries only `flagReportViewIds`, which attaches view ids to
+  the nodes already being read and enables nothing new.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagReportViewIds"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/accessibility_assist_service_description"
+    android:notificationTimeout="200"
+    android:summary="@string/accessibility_assist_service_summary" />

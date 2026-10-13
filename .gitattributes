@@ -1,0 +1,17 @@
+# Keep text files LF in the repository so a checkout on any OS produces byte-identical
+# sources; Git converts to CRLF on Windows checkouts only for files marked text=auto.
+* text=auto eol=lf
+
+# Windows launcher scripts must keep CRLF: cmd.exe mis-parses an LF-only batch file.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+gradlew text eol=lf
+
+# Binary assets: never diff, never convert.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.jar binary
+*.apk binary
+*.zip binary

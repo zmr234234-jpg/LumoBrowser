@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cache dir exposed through the manifest FileProvider, used only for "share this page" as a file.
+  Nothing in this app's persistent storage is exposed: the private files dir is not listed here.
+-->
+<paths>
+    <cache-path name="share" path="share/" />
+</paths>
