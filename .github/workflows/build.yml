@@ -39,6 +39,12 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # An empty package list keeps the action from running `sdkmanager tools`.
+          # That package was removed from the SDK repository, and a newer sdkmanager
+          # fails the whole step with "Warning: Failed to find package 'tools'".
+          # The packages this build actually needs are installed in the next step.
+          packages: ''
 
       - name: Install the SDK packages the build declares
         # compileSdk / buildToolsVersion live in app/build.gradle.kts; keep these in step.
