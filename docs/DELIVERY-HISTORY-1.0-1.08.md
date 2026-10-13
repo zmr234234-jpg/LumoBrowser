@@ -1,4 +1,4 @@
-﻿# LumoBrowser 开发记录（1.0.0 → 1.08）
+# LumoBrowser 开发记录（1.0.0 → 1.08）
 
 > 这份文档是仓库早期交付记录的原文（原本就是 `README.md`），按时间顺序记录了每一轮开发：
 > 真机事故、缺陷根因、被否掉的实现，以及每一轮**没有验证什么**。
@@ -34,7 +34,7 @@
 > 4. **F6 —— 渲染进程重建加了次数上限**（按地址 3 次）：用尽后停在说明面板上，并给一个**用户主动点**的重试，不再可能陷入"重建 → 崩 → 再重建"的死循环。
 > 5. **F4 —— AUTO 阶梯的"空渲染"探针**会把播放器页面判成空页并整页重载，**正好打断正在起来的播放器**（Compat 级还会顺手把 cacheMode 设成 `LOAD_NO_CACHE`）。探针现在把 `video/audio/canvas/object/embed` 也算作"有内容"；另外补上一条守卫：**用户主动停止一次加载，是对这次加载的决定，不是关于这个站点的证据**，所以取消后不会再悄悄把站点爬升一档。
 >
-> **五项刻意不改，理由逐条写在 [`docs/VIDEO_PLAYBACK.md`](docs/VIDEO_PLAYBACK.md) §4**：SSL 证书错误仍然一律取消（本项目的硬约束就是**不忽略 HTTPS 证书错误**，"修"它等于违反约束，改为把诊断信息呈现清楚）、弹窗仍要求用户手势、页面权限仍一律拒绝、主机规则仍覆盖第一方、第三方 Cookie 仍每站默认关闭。
+> **五项刻意不改，理由逐条写在 [`docs/VIDEO_PLAYBACK.md`](VIDEO_PLAYBACK.md) §4**：SSL 证书错误仍然一律取消（本项目的硬约束就是**不忽略 HTTPS 证书错误**，"修"它等于违反约束，改为把诊断信息呈现清楚）、弹窗仍要求用户手势、页面权限仍一律拒绝、主机规则仍覆盖第一方、第三方 Cookie 仍每站默认关闭。
 >
 > ### 二、广告屏蔽：从"写好了"到"真的生效"
 >
@@ -43,14 +43,14 @@
 > 3. **规则更新**：**用户手动触发**，来源是随包常量（没有"规则地址"输入框）；**只走 HTTPS**，重定向前后各查一次，声明长度与实际读取都有上限，**解析成功前一个字节都不写**；结果是**合并**（随包列表 + 上游新增）而不是替换。
 > 4. **不伪造"已是最新"**：更新结果带 `changed`——下载到的是**同一份正在用的清单**时，界面说的是"与当前规则相同"，而不是一次成功更新。
 > 5. **拦截记录**：最近 60 条（有界），设置页可清空；**清空记录不会重置累计拦截数**。
-> 6. **设置页回答三个问题**：现在用的是哪份规则（随包 / 已下载）、本页检查了多少请求、上次下载的时间与版本。细节与全部数字见 [`docs/AD_BLOCKING.md`](docs/AD_BLOCKING.md) 附录 §12。
+> 6. **设置页回答三个问题**：现在用的是哪份规则（随包 / 已下载）、本页检查了多少请求、上次下载的时间与版本。细节与全部数字见 [`docs/AD_BLOCKING.md`](AD_BLOCKING.md) 附录 §12。
 >
 > ### 三、导航安全：一个新的独立模块
 >
 > 新增 `browser/security/`（决策层 + 状态层），四条规则：**重定向环**（同一地址在一次导航里出现到第 3 次）、**弹窗泛滥**（10 秒内第 4 个窗口请求）、**不可信 scheme**、**Safe Browsing 命中**。三个值得写下来的决定：
 >
 > 1. **它不是第二个"要不要在应用内打开"的判断者**——那个问题仍由既有的 `WebNavigationPolicy.classifyNavigation` 回答；本模块只回答"已经决定要导航之后，这一次导航是否安全"。代价是两个同名 `NavigationKind` 并存，所以接线处必须显式 import（注释就在 import 区）。
-> 2. **已接线与未接线的入口分成两张表写清楚**（[`docs/NAVIGATION_SECURITY.md`](docs/NAVIGATION_SECURITY.md) §5、§6）。未接线的四个方法各有理由，其中 `noteSafeBrowsingUnavailable()` **没有平台信号可以接**，因此设置页那句"不可用"在实务上不可达——文案据此改写成**只声称可验证的事**："应用把它开着，并且从不覆盖平台给出的警告"。
+> 2. **已接线与未接线的入口分成两张表写清楚**（[`docs/NAVIGATION_SECURITY.md`](NAVIGATION_SECURITY.md) §5、§6）。未接线的四个方法各有理由，其中 `noteSafeBrowsingUnavailable()` **没有平台信号可以接**，因此设置页那句"不可用"在实务上不可达——文案据此改写成**只声称可验证的事**："应用把它开着，并且从不覆盖平台给出的警告"。
 > 3. **清空记录不等于重置状态**：`clearLog()` 只清记录；`reset()`（连重定向链与弹窗时间窗一起清）刻意**不**被设置页调用——**清掉读者正在看的记录，不应该改变浏览器正在做的事**。
 >
 > ### 四、本机实测（不是预估）
@@ -66,7 +66,7 @@
 >
 > ### 五、诚实边界
 >
-> 需要真机或真实网络才能回答的 7 条（能不能播放、全屏退出、真实站点上的误拦、站点暂停的实际行为、导航安全四入口在真实网页上的表现、崩溃自述页端到端、以及**为什么打不开**）**全部未测试**，逐条列在 [`docs/TESTING.md`](docs/TESTING.md) §0G.7 与 §4，并标明"未测试"而不是"通过"。本轮**没有**做 `--no-build-cache` 冷构建，所以"零警告"的正确读法是"**本轮改动过的文件零警告**"（边界写在同文档 §7.0）。
+> 需要真机或真实网络才能回答的 7 条（能不能播放、全屏退出、真实站点上的误拦、站点暂停的实际行为、导航安全四入口在真实网页上的表现、崩溃自述页端到端、以及**为什么打不开**）**全部未测试**，逐条列在 [`docs/TESTING.md`](TESTING.md) §0G.7 与 §4，并标明"未测试"而不是"通过"。本轮**没有**做 `--no-build-cache` 冷构建，所以"零警告"的正确读法是"**本轮改动过的文件零警告**"（边界写在同文档 §7.0）。
 >
 > ## 🆕 1.07（`versionCode=9`）：崩溃不再静默 · 安全模式 · 广告屏蔽 · 已签名的 Release 包
 >
@@ -84,7 +84,7 @@
 >
 > ### 二、于是换一条路：让崩溃无法静默
 >
-> 没有 logcat，就没有诊断；那就让**应用自己记录并说明自己的死亡**。四个新文件（细节见 [`docs/CRASH_RECOVERY.md`](docs/CRASH_RECOVERY.md)）：
+> 没有 logcat，就没有诊断；那就让**应用自己记录并说明自己的死亡**。四个新文件（细节见 [`docs/CRASH_RECOVERY.md`](CRASH_RECOVERY.md)）：
 >
 > 1. **`crash/CrashGuard.kt`** —— `Application.onCreate` 里紧跟 `super.onCreate()` 装上未捕获异常处理器。三条刻意的选择：**一定调用前一个处理器**（记录完把进程交还平台，让它照常死，绝不做吞掉异常的半死进程）、**用 `SharedPreferences` 的 `commit()` 而不是 DataStore**（写入发生在一个马上要被杀掉的线程上，同步落盘才是对的形状）、**一切有界且包在 `runCatching` 里**（会抛异常的崩溃处理器会把用户的 bug 报告换成更糟的一份）。
 > 2. **`crash/CrashRecord.kt`** —— 报告是**一段人类可读的文字**，磁盘上的文件、屏幕上的文本、分享出去的内容是同一个东西。有界：每个 throwable 最多 48 帧、一条 cause 链最多 6 层、正文 12 000 字元、自指 cause 视为环并终止。`parse` 遇到不认识的内容返回 `null` 而不抛异常。
@@ -95,7 +95,7 @@
 >
 > ### 三、另外交付一个**已签名的 Release 包**
 >
-> 部分 OEM ROM 会拦截或杀掉 **debuggable** 的侧载应用——那也是「闪一下就退回桌面」，而且不是代码问题。所以这一版多了一个包：`dist/LumoBrowser-v1.07-release.apk`，用工程内附带的密钥签名（`CN=LumoBrowser`，证书 SHA-256 `4beb5163…75a9`），**不可调试**；包名不带 `.debug` 后缀，**可以和 Debug 包同时装在一台手机上**。签名密钥是**个人侧载用的一次性密钥**（口令就写在 `keystore/keystore.properties` 与 [`docs/BUILD.md`](docs/BUILD.md) §6，因为它不值得保护），要上架请换成自己的。Release 变体**故意不混淆**（`isMinifyEnabled = false`）：R8 从未在真机上验证过，而 `addJavascriptInterface` 出来的桥方法是反射绑定的——一个 R8 引入的问题会和正在诊断的启动崩溃长得一模一样。
+> 部分 OEM ROM 会拦截或杀掉 **debuggable** 的侧载应用——那也是「闪一下就退回桌面」，而且不是代码问题。所以这一版多了一个包：`dist/LumoBrowser-v1.07-release.apk`，用工程内附带的密钥签名（`CN=LumoBrowser`，证书 SHA-256 `4beb5163…75a9`），**不可调试**；包名不带 `.debug` 后缀，**可以和 Debug 包同时装在一台手机上**。签名密钥是**个人侧载用的一次性密钥**（口令就写在 `keystore/keystore.properties` 与 [`docs/BUILD.md`](BUILD.md) §6，因为它不值得保护），要上架请换成自己的。Release 变体**故意不混淆**（`isMinifyEnabled = false`）：R8 从未在真机上验证过，而 `addJavascriptInterface` 出来的桥方法是反射绑定的——一个 R8 引入的问题会和正在诊断的启动崩溃长得一模一样。
 >
 > ### 四、这一版还包含
 >
@@ -163,8 +163,8 @@
 > 1. **根因之一（更贴症状的那条）：弹窗复用了已经导航过的 WebView。** Chromium 的 `how-does-on-create-window-work.md` 有一节标题逐字就是 **"New WebView for popup window must not have been previously navigated"**，而旧代码 `transport.webView = this` 交出去的正是那个刚导航过无数次的主 WebView；项目里 `supportMultipleWindows = true`，所以**每次点 `target="_blank"` 都会走进去**。第三、四层页面正是站内 `_blank` 链接最密的地方——「二级页正常、三级页闪退」的位置就此对上。失败是 **native SIGSEGV，不是 Java 异常，`runCatching` 拦不住**。改为每次弹窗新建 scratch WebView：不挂视图树、取消一切导航，因此永远停在 `about:blank`，任何时刻都能安全销毁。同时把三路分派抽成 `dispatchNavigation(url, inApp)`，让「点链接」和「弹窗要打开的地址」走同一份判定，不会各自长出一份副本。
 > 2. **根因之二：渲染进程死后回调了尸体。** `WebView` 比渲染进程活得久，进程没了之后它的每个方法**仍然会正常返回**，但每一次调用都跨进一个已经不存在的进程。新增退役状态机（`retired` / `destroyed` 两个独立布尔量、13 个跨 renderer 入口加守卫），修正 `emit()` 的求值顺序（原来是 `onState?.invoke(BrowserState(...))`，Kotlin 会先把整个引数清单求值完才发现没人可通知——等于对一具尸体照做了一整套跨进程调用），并把 `AndroidView(onRelease = …)` 定为**全 App 唯一的销毁点**——旧代码在一条崩溃路径上 destroy 了三次。
 > 3. **外部软件跳转：先问，再交出去。** 建立不变量「**`LumoWebView` 永不启动 activity、永不自行解析 intent**；全 App 只有一处能造成外部效果，而那一处会先问用户」。`tel:` / `mailto:` / `market:` / `intent://` 现在从底部滑出 Material 3 确认面板，写清「要打开什么」和「由谁打开」。三个决定值得记：**`intent://` 由本项目重建，绝不用 `Intent.parseUri`**（平台解析器会吃 `component=` / `launchFlags=`，那正是 intent redirection 的入口，而本项目的解析器显式忽略这两个字段）；**每次启动都排除 LUMO 自己**（它注册了 http/https 的 `VIEW`，不排除就会「解析到自己」，用户按了确认什么也没发生）；**确认按钮的可用性不依赖包可见性预检**（`canHandle` 是一次 `PackageManager` 查询，Android 11+ 只看得到 `<queries>` 放行的包，拿它当 `enabled` 会让一次预检失误把一个本来能用的链接**永久按不动**——所以预检只影响文案，真正的答案由点击后的 `HandoffOutcome` 回报）。
-> 4. **按钮规范。** 报告是「按下去的反馈和按钮的形状对不上」。根因不是某条修饰符写错，而是同一件事在三个按钮里各写了一遍、三份副本各自漂移。修掉三处：图标按钮的**涟漪溢出形状**（`clickable` 挂在 48dp 触控区上，而视觉形状是里面 44dp 的圆角容器，外层没有 `clip`——加 `clip` 即可，**`clip` 只影响绘制不影响指针输入**，48dp 触控区原样保留）；**禁用态只淡填色不淡描边**（填色降到 45%、轮廓保持全强度，围着一个变暗的形状，读起来像「能按，只是内容空了」）；**色票涟漪硬编码白色**（八个自定义色里三个近白，白涟漪画在白底上等于没有反馈）。另有一条**刻意的例外**：渐变描边在禁用时**原样不动**——它没有单一 alpha 可调，淡化等于替用户发明第二个渐变。见新增的 [`docs/BUTTON_SPEC.md`](docs/BUTTON_SPEC.md)。
-> 5. **设置页重构与功能审查。** 设置页从一条 2021 行的单层长滚动列表改成**系统设置风格**：首页分类卡片 + 二级页面 + 设置搜索直达，八大分类，重要操作统一走一个二次确认对话框。配套的**功能审查**逐字段追了 58 个偏好的读取者，产出「保留 / 合并 / 修复 / 删除 / 暂缓」清单——其中 **3 个假开关被删掉**（`defaultBrowserMode`、`checkNetworkBeforeOpening`、`rememberPerSiteNetworkAssist`：有字段、有存储键、有界面开关，**但没有任何代码路径读它**），另有 **2 条死字符串资源**一并清除。见 [`docs/SETTINGS_STRUCTURE.md`](docs/SETTINGS_STRUCTURE.md) 与 [`docs/FEATURE_CLEANUP.md`](docs/FEATURE_CLEANUP.md)。
+> 4. **按钮规范。** 报告是「按下去的反馈和按钮的形状对不上」。根因不是某条修饰符写错，而是同一件事在三个按钮里各写了一遍、三份副本各自漂移。修掉三处：图标按钮的**涟漪溢出形状**（`clickable` 挂在 48dp 触控区上，而视觉形状是里面 44dp 的圆角容器，外层没有 `clip`——加 `clip` 即可，**`clip` 只影响绘制不影响指针输入**，48dp 触控区原样保留）；**禁用态只淡填色不淡描边**（填色降到 45%、轮廓保持全强度，围着一个变暗的形状，读起来像「能按，只是内容空了」）；**色票涟漪硬编码白色**（八个自定义色里三个近白，白涟漪画在白底上等于没有反馈）。另有一条**刻意的例外**：渐变描边在禁用时**原样不动**——它没有单一 alpha 可调，淡化等于替用户发明第二个渐变。见新增的 [`docs/BUTTON_SPEC.md`](BUTTON_SPEC.md)。
+> 5. **设置页重构与功能审查。** 设置页从一条 2021 行的单层长滚动列表改成**系统设置风格**：首页分类卡片 + 二级页面 + 设置搜索直达，八大分类，重要操作统一走一个二次确认对话框。配套的**功能审查**逐字段追了 58 个偏好的读取者，产出「保留 / 合并 / 修复 / 删除 / 暂缓」清单——其中 **3 个假开关被删掉**（`defaultBrowserMode`、`checkNetworkBeforeOpening`、`rememberPerSiteNetworkAssist`：有字段、有存储键、有界面开关，**但没有任何代码路径读它**），另有 **2 条死字符串资源**一并清除。见 [`docs/SETTINGS_STRUCTURE.md`](SETTINGS_STRUCTURE.md) 与 [`docs/FEATURE_CLEANUP.md`](FEATURE_CLEANUP.md)。
 >
 > **测试**：最终 **460 例 / 29 个类**（上一版 372 例 / 25 类），见下方「一次被自己抓到的假绿」。新增 `WebNavigationPolicyTest`（34 例）、`ButtonStateTest`（8 例）。
 >
@@ -184,7 +184,7 @@
 > 3. **五个真实缺陷。前三个是新测试第一次运行就抓出来的**（都是产品代码的 bug，不是测试写错）：`isForbiddenAssistPackage` 比对裸常量，**漏掉了 debug 变体自己的包**——「开发者手机上实际安装的那个变体」成了唯一漏网的，而失败是静默的；`AssistTargetCodec.unescape` 吃掉反斜杠，把 `C:\vpn` 变成 `C:vpn`，而同段注释声称「原样保留」；`isEnabledViaSecureSetting` 用的是 `ComponentName.unflattenFromString` 已经展开过的名字，导致**用户已在 Android 设置里打开的服务被报告成关闭**（false negative 让用户损失一个他明明已经打开的功能）。**后两个是编译器抓出来的，测试从来没红过**：`notePressed(attempt)` 收下参数却从不读它（"一次回调里不可能换掉 attempt" 这个假设从未被检查）；`AccessibilityTextField` 的 `onSubmit` 从未被调用（**键盘上的「完成」键按下去什么都不会发生**）。它们以两条 `Parameter 'x' is never used` 警告的形式在前几次构建里一直存在、一直被当作噪音——**一条总是出现、又从不影响结果的警告，会自然退化成没人读的装饰**。修掉之后，构建日志里 Kotlin 警告数为 **0**。详见 [第 16.3 节](#163-五个真实缺陷前三个由新测试抓出后两个由编译器抓出)。
 > 4. **顺带关掉一个旧缺口**：2.2 遗留清单第 ⑧ 项——`startupTimeline()` 的纯函数测试，12 例。
 >
-> **测试**：无障碍 **59 例**（`t13.txt`）+ 启动动画 **12 例**（`t15.txt`），全部通过；全量 **372 例 / 0 失败**，干净重建 `BUILD SUCCESSFUL in 16m 37s`。完整说明见新增的 [`docs/ACCESSIBILITY_ASSIST.md`](docs/ACCESSIBILITY_ASSIST.md)。
+> **测试**：无障碍 **59 例**（`t13.txt`）+ 启动动画 **12 例**（`t15.txt`），全部通过；全量 **372 例 / 0 失败**，干净重建 `BUILD SUCCESSFUL in 16m 37s`。完整说明见新增的 [`docs/ACCESSIBILITY_ASSIST.md`](ACCESSIBILITY_ASSIST.md)。
 >
 > ⚠️ **诚实边界**：**真机端到端未验证**——本机没有可用的模拟器或真机，节点树遍历与 `performAction(ACTION_CLICK)` 的实际效果未被实际运行验证过。验收表里这一条按「实现完成、真机未验」记，不记全绿。
 >
@@ -192,18 +192,18 @@
 >
 > 这一轮是**专项升级**，四个大项，每一件都先说清楚"能做到什么、做不到什么"：
 >
-> 1. **VPN 辅助重写。** 上一版的状态面板有两个结构性错误：`Connected` 只要设备上有 VPN 承载默认路由就报「已连接」（那是关于**设备**的观测，不是关于本应用的结论），而 `Connecting` / `Failed` 两态由一个**全程零写入者的旗标**驱动——**六态里有两态永远到不了**，界面会一直等下去。现在状态由 `resolveVpnReport(...)` 从三个独立来源合成（隧道真实状态、网络快照、能力），并新增第七态 `DetectedNetwork`：**只检测到系统 VPN 网络时标记为「检测到 VPN 网络」，绝不冒充已连接。** 详见 [第 15 节](#15-v22第六轮vpn-集成音效按钮视觉启动动画) 与 [`docs/VPN_INTEGRATION.md`](docs/VPN_INTEGRATION.md)。
-> 2. **音效系统重写。** 76 个 WAV 素材（19 种事件 × 4 种风格）**全部程序化合成、零第三方素材**，改用 `SoundPool` 预载异步解码，并补齐设置页与试听。**19 个事件此前只有 12 个真的会响**，现在全部接上线。详见 [`docs/AUDIO_ASSETS.md`](docs/AUDIO_ASSETS.md)。
+> 1. **VPN 辅助重写。** 上一版的状态面板有两个结构性错误：`Connected` 只要设备上有 VPN 承载默认路由就报「已连接」（那是关于**设备**的观测，不是关于本应用的结论），而 `Connecting` / `Failed` 两态由一个**全程零写入者的旗标**驱动——**六态里有两态永远到不了**，界面会一直等下去。现在状态由 `resolveVpnReport(...)` 从三个独立来源合成（隧道真实状态、网络快照、能力），并新增第七态 `DetectedNetwork`：**只检测到系统 VPN 网络时标记为「检测到 VPN 网络」，绝不冒充已连接。** 详见 [第 15 节](#15-v22第六轮vpn-集成音效按钮视觉启动动画) 与 [`docs/VPN_INTEGRATION.md`](VPN_INTEGRATION.md)。
+> 2. **音效系统重写。** 76 个 WAV 素材（19 种事件 × 4 种风格）**全部程序化合成、零第三方素材**，改用 `SoundPool` 预载异步解码，并补齐设置页与试听。**19 个事件此前只有 12 个真的会响**，现在全部接上线。详见 [`docs/AUDIO_ASSETS.md`](AUDIO_ASSETS.md)。
 > 3. **按钮阴影的根因修复。** 全库只有两处 `Modifier.shadow`，两处都用 `Color.Black` 且都写在 `.clip(shape)` **之前**（所以裁不到），另有 12 组父子重复投影；浅色主题的"脏边"来自 `hairline()` 在浅色下返回**黑 @ 0.495**。逐条定位后修掉，**没有对按钮统一设 `shadow = 0`**。
-> 4. **2～3 秒三阶段冷启动动画。** 全程无 blur、单一驱动源；**是覆盖层不是闸门**——`content` 从第一帧就在下面组合与布局，动画最坏的失败模式（自己变成打不开的原因）在结构上不可表达。详见 [`docs/STARTUP_ANIMATION.md`](docs/STARTUP_ANIMATION.md)。
+> 4. **2～3 秒三阶段冷启动动画。** 全程无 blur、单一驱动源；**是覆盖层不是闸门**——`content` 从第一帧就在下面组合与布局，动画最坏的失败模式（自己变成打不开的原因）在结构上不可表达。详见 [`docs/STARTUP_ANIMATION.md`](STARTUP_ANIMATION.md)。
 >
 > **顺带修掉一个真 bug**：`UserPreferences.reduceMotion`（设置页那个"减少动效"开关）是一个**死偏好**——它有字段、有存储键、有读写、有 UI 开关，但**从未传进主题构建**，唯一生效的是系统级旗标。
 >
-> **回归**：单元测试 **301 用例 · 0 失败 · 0 错误 · 0 跳过**（21 个类；上一版 263）。**VPN 集成测试第一次运行就抓出三个真实产品缺陷**（都是产品代码的 bug，不是测试写错），详见 [`docs/TESTING.md`](docs/TESTING.md) §3.14。
+> **回归**：单元测试 **301 用例 · 0 失败 · 0 错误 · 0 跳过**（21 个类；上一版 263）。**VPN 集成测试第一次运行就抓出三个真实产品缺陷**（都是产品代码的 bug，不是测试写错），详见 [`docs/TESTING.md`](TESTING.md) §3.14。
 >
-> ⚠️ **关于 VPN 能力，这里先把话说清楚**：**本版本不能建立 VPN 连接。** `TunnelBackends` 注册表是空的——没有协议实现、没有服务器配置界面。做到的是：授权流程、服务生命周期、前台通知、状态合成、端点持久化、已安装 VPN 应用的发现与打开。**这不是"暂时为空"，出到一个协议就等于出一个对真实服务器跑过的实现，而两者都不存在。** 完整的"有什么 / 缺什么"对照表在 [`docs/VPN_INTEGRATION.md`](docs/VPN_INTEGRATION.md) 第一节。
+> ⚠️ **关于 VPN 能力，这里先把话说清楚**：**本版本不能建立 VPN 连接。** `TunnelBackends` 注册表是空的——没有协议实现、没有服务器配置界面。做到的是：授权流程、服务生命周期、前台通知、状态合成、端点持久化、已安装 VPN 应用的发现与打开。**这不是"暂时为空"，出到一个协议就等于出一个对真实服务器跑过的实现，而两者都不存在。** 完整的"有什么 / 缺什么"对照表在 [`docs/VPN_INTEGRATION.md`](VPN_INTEGRATION.md) 第一节。
 >
-> ⚠️ **无障碍服务**：**v2.2 时本版不做；1.03 已实现。** 完整说明见 [`docs/ACCESSIBILITY_ASSIST.md`](docs/ACCESSIBILITY_ASSIST.md)。v2.2 当时记录的五条「将来实现时的既定约束」在 1.03 实现时**逐条照做，没有一条被放宽**，当时的理由（「为一个不存在的服务做授权状态检查，只能检查出一个恒为 false 的值，那不是功能，是装饰」）也保留在 [`docs/VPN_INTEGRATION.md`](docs/VPN_INTEGRATION.md) 第四节。
+> ⚠️ **无障碍服务**：**v2.2 时本版不做；1.03 已实现。** 完整说明见 [`docs/ACCESSIBILITY_ASSIST.md`](ACCESSIBILITY_ASSIST.md)。v2.2 当时记录的五条「将来实现时的既定约束」在 1.03 实现时**逐条照做，没有一条被放宽**，当时的理由（「为一个不存在的服务做授权状态检查，只能检查出一个恒为 false 的值，那不是功能，是装饰」）也保留在 [`docs/VPN_INTEGRATION.md`](VPN_INTEGRATION.md) 第四节。
 >
 > ### 🔧 第四轮（1.02）：浏览模式、浏览器兼容性、设置即时反馈
 >
@@ -221,7 +221,7 @@
 >
 > **版本号**：`versionCode` **2 → 3**、`versionName` **1.0.1 → 1.02**（Debug 变体实际显示 `1.02-debug`）。
 >
-> **回归**：`clean` 冷构建（禁用构建缓存）`BUILD SUCCESSFUL in 4m 15s`、**零 error、零 warning**，单元测试 **223 用例 · 0 失败 · 0 错误 · 0 跳过**（上一版 147，本轮新增 76）。细节见 [第 10 节](#10-第四轮102浏览模式--浏览器兼容性--设置即时反馈)、[第 11 节](#11-第四轮102实际验证了什么) 与 [`CHANGELOG.md`](CHANGELOG.md)。
+> **回归**：`clean` 冷构建（禁用构建缓存）`BUILD SUCCESSFUL in 4m 15s`、**零 error、零 warning**，单元测试 **223 用例 · 0 失败 · 0 错误 · 0 跳过**（上一版 147，本轮新增 76）。细节见 [第 10 节](#10-第四轮102浏览模式--浏览器兼容性--设置即时反馈)、[第 11 节](#11-第四轮102实际验证了什么) 与 [`CHANGELOG.md`](../CHANGELOG.md)。
 >
 > ### 第三轮修复（历史）：设置里切换语言时卡死
 >
@@ -237,7 +237,7 @@
 >
 > **版本号**：`versionCode` → **2**、`versionName` → **1.0.1**（Debug 变体带后缀，实际显示 `1.0.1-debug`）。同时把构建时间编译进 `BuildConfig.BUILD_TIME`，设置页"关于"面板新增**构建时间**一行——Debug 包是手动侧载的，装了哪个包必须能自己说出来。
 >
-> **回归**：`clean` 冷构建 + 全量单元测试 **147 用例 0 失败**（原 140 + 本次新增 7），零 error、零 warning。细节见 [第 7 节](#7-第三轮设置里切换语言卡死) 与 [`docs/TESTING.md`](docs/TESTING.md) §3.11。
+> **回归**：`clean` 冷构建 + 全量单元测试 **147 用例 0 失败**（原 140 + 本次新增 7），零 error、零 warning。细节见 [第 7 节](#7-第三轮设置里切换语言卡死) 与 [`docs/TESTING.md`](TESTING.md) §3.11。
 >
 > ### 🔧 第二轮修复：卡顿 / 按键没反馈 / 点击不灵敏
 >
@@ -265,20 +265,20 @@
 
 | 交付物 | 路径 | 说明 |
 | --- | --- | --- |
-| Debug APK | [`dist/LumoBrowser-v1.08-debug.apk`](dist/LumoBrowser-v1.08-debug.apk) | **1.08**，可直接安装测试，**Debug 签名，非正式发布签名**（19,535,475 字节，SHA-256 `833FEE7E…C911E`） |
-| Release APK（已签名） | [`dist/LumoBrowser-v1.08-release.apk`](dist/LumoBrowser-v1.08-release.apk) | **1.08**，用工程内附带的密钥签名、**不可调试**、包名不带 `.debug` 后缀（13,182,384 字节，SHA-256 `876BAFA2…6E42`），可与 Debug 包共存；**与 1.07 同一把密钥**，所以它能直接覆盖手机上已装的 1.07 Release。存在的理由见 [第 2.2 节](#22-如果-107-还是打不开)：部分 ROM 会拦截 debuggable 的侧载应用 |
-| 完整源码 | [`dist/LumoBrowser-v1.08-source.zip`](dist/LumoBrowser-v1.08-source.zip) | 可导入 Android Studio 的完整 Gradle 工程（**见下方源码包实测信息**，含 76 个音效素材、`docs/` 全部条目（其中含各版构建日志）；附 `keystore/`，便于自行重建可覆盖安装的 Release 包） |
-| 构建日志 | [`docs/build-logs/`](docs/build-logs/README.md) | **21 份原始 Gradle 日志副本** + 索引（1.04 起收录；1.08 新增六份，含**失败**的那一次编译 `v108-compile-failed-safebrowsing.txt`，1.07 的两份在本版补齐）。验收要求交付构建日志，而此前这些日志**从没进过源码包**——文档按名字引用 `c30.txt`、`t13.txt`，收件人手上却没有这些文件 |
-| 无障碍辅助说明 | [`docs/ACCESSIBILITY_ASSIST.md`](docs/ACCESSIBILITY_ASSIST.md) | **本版新增**：它做什么、七种结果、安全边界逐条、五个真实缺陷、59 例测试、这一版没做什么 |
-| VPN 集成说明 | [`docs/VPN_INTEGRATION.md`](docs/VPN_INTEGRATION.md) | **能不能真实建立连接、支持哪些外部服务、是否依赖用户自备服务器**、无障碍功能的状态（第四节已在 1.03 改写） |
-| 音效素材说明 | [`docs/AUDIO_ASSETS.md`](docs/AUDIO_ASSETS.md) | 76 个素材的来源/作者/许可、合成参数、19 种事件表、播放引擎与规格逐条对照 |
-| 启动动画说明 | [`docs/STARTUP_ANIMATION.md`](docs/STARTUP_ANIMATION.md) | 三阶段时间表、两个结构性决定、何时播/何时不播、与系统 SplashScreen 的关系 |
-| 构建说明 | [`docs/BUILD.md`](docs/BUILD.md) | 环境要求、命令行/Android Studio 构建、离线测试配置、Release 签名、**§8 各版建置记录（含 1.08）** |
-| 测试记录 | [`docs/TESTING.md`](docs/TESTING.md) | **§0.0 当前交付（1.08）** 的实测数字表（**718 例 / 44 类全绿**、两个 APK 的字节数与 SHA-256、签名与 badging 校验）与 **§0G 1.08 验收标准覆盖表**（A 广告屏蔽 / B F1–F12 影片与全屏 / C 导航安全 / D 回归 / E 真实建置 / F 交付物，逐项标「通过 / 静态审查 / 未测试」，G 组是必须由真机与真实网络回答的 7 条）、**§7.0 1.08 构建与测试记录**；历史留档：**§0.0a 1.07**、**§0E 1.06 验收标准覆盖表**、**§7.0a 1.07 构建与测试记录**、**§0A 1.03 验收标准更新**、**§0B v2.2 二十条验收标准结果表**（9 通过 / 10 部分通过 / 1 未通过）、**§0C 1.04**、**§0D 1.05**（并含 §0D.7「校验脚本自己造出来的两次假警报」）、**§7.1 1.05**（505 例 / 32 类、`--no-build-cache` 冷构建）、**§7.2 1.04**（460 例 / 29 类）；以及实际跑过的测试、无法执行的测试与原因 |
-| 浏览模式说明 | [`docs/BROWSER_MODES.md`](docs/BROWSER_MODES.md) | 四种浏览模式的行为差异、AUTO 的升级阶梯与边界、每网址设置 |
-| 1.02 交付记录 | [`docs/RELEASE-1.02.md`](docs/RELEASE-1.02.md) | 上一版的构建日志与冷构建自足性验证（留档） |
-| 变更历史 | [`CHANGELOG.md`](CHANGELOG.md) | 1.0 → 1.0.1 → 1.02 → 2.2 → 1.03 → 1.04 → 1.05 → 1.06 → 1.07 → **1.08** 的逐条变更 |
-| 校验和 | [`dist/SHA256SUMS.txt`](dist/SHA256SUMS.txt) | `dist/` 下全部 20 个文件（含本版 3 个新产物）的 SHA-256（放在压缩包之外，避免自我指涉） |
+| Debug APK | `dist/LumoBrowser-v1.08-debug.apk` | **1.08**，可直接安装测试，**Debug 签名，非正式发布签名**（19,535,475 字节，SHA-256 `833FEE7E…C911E`） |
+| Release APK（已签名） | `dist/LumoBrowser-v1.08-release.apk` | **1.08**，用工程内附带的密钥签名、**不可调试**、包名不带 `.debug` 后缀（13,182,384 字节，SHA-256 `876BAFA2…6E42`），可与 Debug 包共存；**与 1.07 同一把密钥**，所以它能直接覆盖手机上已装的 1.07 Release。存在的理由见 [第 2.2 节](#22-如果-107-还是打不开)：部分 ROM 会拦截 debuggable 的侧载应用 |
+| 完整源码 | `dist/LumoBrowser-v1.08-source.zip` | 可导入 Android Studio 的完整 Gradle 工程（**见下方源码包实测信息**，含 76 个音效素材、`docs/` 全部条目（其中含各版构建日志）；附 `keystore/`，便于自行重建可覆盖安装的 Release 包） |
+| 构建日志 | [`docs/build-logs/`](build-logs/README.md) | **21 份原始 Gradle 日志副本** + 索引（1.04 起收录；1.08 新增六份，含**失败**的那一次编译 `v108-compile-failed-safebrowsing.txt`，1.07 的两份在本版补齐）。验收要求交付构建日志，而此前这些日志**从没进过源码包**——文档按名字引用 `c30.txt`、`t13.txt`，收件人手上却没有这些文件 |
+| 无障碍辅助说明 | [`docs/ACCESSIBILITY_ASSIST.md`](ACCESSIBILITY_ASSIST.md) | **本版新增**：它做什么、七种结果、安全边界逐条、五个真实缺陷、59 例测试、这一版没做什么 |
+| VPN 集成说明 | [`docs/VPN_INTEGRATION.md`](VPN_INTEGRATION.md) | **能不能真实建立连接、支持哪些外部服务、是否依赖用户自备服务器**、无障碍功能的状态（第四节已在 1.03 改写） |
+| 音效素材说明 | [`docs/AUDIO_ASSETS.md`](AUDIO_ASSETS.md) | 76 个素材的来源/作者/许可、合成参数、19 种事件表、播放引擎与规格逐条对照 |
+| 启动动画说明 | [`docs/STARTUP_ANIMATION.md`](STARTUP_ANIMATION.md) | 三阶段时间表、两个结构性决定、何时播/何时不播、与系统 SplashScreen 的关系 |
+| 构建说明 | [`docs/BUILD.md`](BUILD.md) | 环境要求、命令行/Android Studio 构建、离线测试配置、Release 签名、**§8 各版建置记录（含 1.08）** |
+| 测试记录 | [`docs/TESTING.md`](TESTING.md) | **§0.0 当前交付（1.08）** 的实测数字表（**718 例 / 44 类全绿**、两个 APK 的字节数与 SHA-256、签名与 badging 校验）与 **§0G 1.08 验收标准覆盖表**（A 广告屏蔽 / B F1–F12 影片与全屏 / C 导航安全 / D 回归 / E 真实建置 / F 交付物，逐项标「通过 / 静态审查 / 未测试」，G 组是必须由真机与真实网络回答的 7 条）、**§7.0 1.08 构建与测试记录**；历史留档：**§0.0a 1.07**、**§0E 1.06 验收标准覆盖表**、**§7.0a 1.07 构建与测试记录**、**§0A 1.03 验收标准更新**、**§0B v2.2 二十条验收标准结果表**（9 通过 / 10 部分通过 / 1 未通过）、**§0C 1.04**、**§0D 1.05**（并含 §0D.7「校验脚本自己造出来的两次假警报」）、**§7.1 1.05**（505 例 / 32 类、`--no-build-cache` 冷构建）、**§7.2 1.04**（460 例 / 29 类）；以及实际跑过的测试、无法执行的测试与原因 |
+| 浏览模式说明 | [`docs/BROWSER_MODES.md`](BROWSER_MODES.md) | 四种浏览模式的行为差异、AUTO 的升级阶梯与边界、每网址设置 |
+| 1.02 交付记录 | [`docs/RELEASE-1.02.md`](RELEASE-1.02.md) | 上一版的构建日志与冷构建自足性验证（留档） |
+| 变更历史 | [`CHANGELOG.md`](../CHANGELOG.md) | 1.0 → 1.0.1 → 1.02 → 2.2 → 1.03 → 1.04 → 1.05 → 1.06 → 1.07 → **1.08** 的逐条变更 |
+| 校验和 | [`dist/SHA256SUMS.txt`](../CHANGELOG.md) | `dist/` 下全部 20 个文件（含本版 3 个新产物）的 SHA-256（放在压缩包之外，避免自我指涉） |
 
 APK 实测信息（`aapt2 dump badging` / `apksigner verify`）：
 
@@ -317,11 +317,11 @@ SHA-256 d7894d077d3af692989a131ebcd99428efe8313e4f473f42d9ad5ba74f009bcb
 
 > 最后两行不是装饰：76 个生成素材正是那种「悄悄没打进包、编译照样通过、装上也照样能开，只是全程静音」的东西。发布前的校验脚本会在**源码树、源码压缩包、APK 资源表**三处各数一遍 76 这个数，数不上就拒绝发布；`classes.dex` 里那一串类名同理——它们证明这个 APK 确实含有 1.03、1.04、1.05 与 v2.2 的工作，而不只是声称含有。
 >
-> **1.03 的校验脚本还多问了三件事**，每一件都来自本版自己的事故：三份 `strings.xml` 是不是各有 371 条字符串、名称集合是否完全一致（它们在 1.03 期间被写坏过一次，见 [`CHANGELOG.md`](CHANGELOG.md)）；以及 **APK 的 manifest 是否真的声明了那个服务**——一个存在于 Kotlin 却从没进 manifest 的服务对 Android 的无障碍设置是不可见的，用户会在列表里找不到 LUMO，然后没有任何东西可以打开。第一次跑这条检查时报了「未声明」，而 `aapt2 dump xmltree` 证明 manifest 其实是对的：**是我自己的检查用 UTF-8 字节搜一个 UTF-16 的字符串池**。这个误报本身就是本版的主题——一个看起来在检查、其实永远为假的判断。
+> **1.03 的校验脚本还多问了三件事**，每一件都来自本版自己的事故：三份 `strings.xml` 是不是各有 371 条字符串、名称集合是否完全一致（它们在 1.03 期间被写坏过一次，见 [`CHANGELOG.md`](../CHANGELOG.md)）；以及 **APK 的 manifest 是否真的声明了那个服务**——一个存在于 Kotlin 却从没进 manifest 的服务对 Android 的无障碍设置是不可见的，用户会在列表里找不到 LUMO，然后没有任何东西可以打开。第一次跑这条检查时报了「未声明」，而 `aapt2 dump xmltree` 证明 manifest 其实是对的：**是我自己的检查用 UTF-8 字节搜一个 UTF-16 的字符串池**。这个误报本身就是本版的主题——一个看起来在检查、其实永远为假的判断。
 >
-> > **本版 APK 是本机构建的产物**（`app/build/outputs/apk/debug/app-debug.apk` → 复制为 `dist/LumoBrowser-v1.05-debug.apk`），交付装配用 `clean :app:assembleDebug --no-build-cache` 得到 `BUILD SUCCESSFUL in 36s`（`41 actionable tasks` 里 **40 个真的执行**、没有一个任务的输出来自构建缓存，所以这一版的「Kotlin 警告 0 条」不需要任何限定语），单元测试 `:app:testDebugUnitTest --no-build-cache` 在最终源码上得到 `BUILD SUCCESSFUL in 22m 51s`、505 例全绿。**与 1.02 不同，2.2、1.03、1.04 与本版都没有做"源码包解开重新冷构建"的二次验证**——这一条明确记在 [`docs/TESTING.md`](docs/TESTING.md) 的未执行清单里，没有当成做过。
+> > **本版 APK 是本机构建的产物**（`app/build/outputs/apk/debug/app-debug.apk` → 复制为 `dist/LumoBrowser-v1.05-debug.apk`），交付装配用 `clean :app:assembleDebug --no-build-cache` 得到 `BUILD SUCCESSFUL in 36s`（`41 actionable tasks` 里 **40 个真的执行**、没有一个任务的输出来自构建缓存，所以这一版的「Kotlin 警告 0 条」不需要任何限定语），单元测试 `:app:testDebugUnitTest --no-build-cache` 在最终源码上得到 `BUILD SUCCESSFUL in 22m 51s`、505 例全绿。**与 1.02 不同，2.2、1.03、1.04 与本版都没有做"源码包解开重新冷构建"的二次验证**——这一条明确记在 [`docs/TESTING.md`](TESTING.md) 的未执行清单里，没有当成做过。
 >
-> Debug APK 是**逐次重新签名**的，每次构建的 SHA-256 都不同（DEX 里的 `BuildConfig.BUILD_TIME`、zip 条目时间戳与签名块都会变）。上面这个哈希对应的是 `dist/` 里那一个文件，换台机器重新构建得到的是**功能等价但哈希不同**的包——想校验手上的文件是否就是本次交付的包，请比对 [`dist/SHA256SUMS.txt`](dist/SHA256SUMS.txt)。
+> Debug APK 是**逐次重新签名**的，每次构建的 SHA-256 都不同（DEX 里的 `BuildConfig.BUILD_TIME`、zip 条目时间戳与签名块都会变）。上面这个哈希对应的是 `dist/` 里那一个文件，换台机器重新构建得到的是**功能等价但哈希不同**的包——想校验手上的文件是否就是本次交付的包，请比对 [`dist/SHA256SUMS.txt`](../CHANGELOG.md)。
 
 1.08 两个包的实测信息（`aapt dump badging` / `apksigner verify` / `aapt dump xmltree`，全部在本机跑过）：
 
@@ -362,7 +362,7 @@ zipalign -c -p -v 4 两个包均 Verification succesful
      classes.dex/classes2.dex 中 NavigationSecurityManager 与 pausedEntriesFor 命中 14 处
 ```
 
-> **1.08 也是本机构建的产物**（`app/build/outputs/apk/{debug,release}/` → 复制为 `dist/LumoBrowser-v1.08-*.apk`）。本版用的是**分层构建**：`assembleDebug` 与 `assembleRelease` 合并成一次调用，`BUILD SUCCESSFUL in 1m 44s`、0 条 `e:` 与 0 条 `w:`；单元测试 `:app:testDebugUnitTest` 在最终源码上得到 `BUILD SUCCESSFUL in 38s`、**718 例 / 44 类全绿**。构建日志原文收在 [`docs/build-logs/`](docs/build-logs/README.md)（`v108-assemble.txt`、`v108-tests.txt`、`v108-compile.txt`）。**没有做「解开源码包重新冷构建」的二次验证**，理由与边界记在 [`docs/TESTING.md`](docs/TESTING.md) §7.0；因此「0 警告」的准确含义是**本轮改动的文件 0 警告**，不是全树冷构建 0 警告。
+> **1.08 也是本机构建的产物**（`app/build/outputs/apk/{debug,release}/` → 复制为 `dist/LumoBrowser-v1.08-*.apk`）。本版用的是**分层构建**：`assembleDebug` 与 `assembleRelease` 合并成一次调用，`BUILD SUCCESSFUL in 1m 44s`、0 条 `e:` 与 0 条 `w:`；单元测试 `:app:testDebugUnitTest` 在最终源码上得到 `BUILD SUCCESSFUL in 38s`、**718 例 / 44 类全绿**。构建日志原文收在 [`docs/build-logs/`](build-logs/README.md)（`v108-assemble.txt`、`v108-tests.txt`、`v108-compile.txt`）。**没有做「解开源码包重新冷构建」的二次验证**，理由与边界记在 [`docs/TESTING.md`](TESTING.md) §7.0；因此「0 警告」的准确含义是**本轮改动的文件 0 警告**，不是全树冷构建 0 警告。
 
 1.07 两个包的实测信息（`aapt2 dump badging` / `apksigner verify`）：
 
@@ -416,7 +416,7 @@ LumoBrowser-v1.08-source.zip  287 个条目（1.07 是 267 档；含 docs/ 下 2
       .apk/.aar/.zip
 ```
 
-> 压缩包的**精确字节数与 SHA-256 不写在本文件里**——本文件本身就在压缩包内，写进去会自我指涉、永远对不上。交付物的精确哈希统一公布在压缩包之外的 [`dist/SHA256SUMS.txt`](dist/SHA256SUMS.txt)。
+> 压缩包的**精确字节数与 SHA-256 不写在本文件里**——本文件本身就在压缩包内，写进去会自我指涉、永远对不上。交付物的精确哈希统一公布在压缩包之外的 [`dist/SHA256SUMS.txt`](../CHANGELOG.md)。
 
 > 上一版（2.2 / `versionCode=4`）与更早的 1.02 的 APK 与源码包仍在 `dist/` 顶层留档，1.0.1 在 `dist/previous-1.0.1/`。**本版与 1.02、2.2 都用同一个 Debug 证书签名，可以互相覆盖安装**（包名同为 `com.lumobrowser.app.debug`）。`dist/SHA256SUMS.txt` 登记 `dist/` 下全部 **20** 个文件（v1.08 的 Debug / Release / 源码包三条是本版新增），每条都实测校验通过。
 >
@@ -439,7 +439,7 @@ LumoBrowser-v1.08-source.zip  287 个条目（1.07 是 267 档；含 docs/ 下 2
 
 要求 Android 8.0 及以上。应用不申请存储权限，也不在后台联网。
 
-> **关于「VPN 辅助」这个开关**：本版本**不能建立 VPN 连接**，它的实际用途是——读取系统的网络/VPN 状态、在网页加载失败时判断这算不算网络问题、打开你**已经安装的** VPN 应用或系统的 VPN 设置页、以及在你连上之后重试网页。状态面板会明确区分「已连接」（本应用建立的隧道）与「检测到 VPN 网络」（设备上有 VPN，但本应用无法确认它通向你要的网站）。完整说明见 [`docs/VPN_INTEGRATION.md`](docs/VPN_INTEGRATION.md)。
+> **关于「VPN 辅助」这个开关**：本版本**不能建立 VPN 连接**，它的实际用途是——读取系统的网络/VPN 状态、在网页加载失败时判断这算不算网络问题、打开你**已经安装的** VPN 应用或系统的 VPN 设置页、以及在你连上之后重试网页。状态面板会明确区分「已连接」（本应用建立的隧道）与「检测到 VPN 网络」（设备上有 VPN，但本应用无法确认它通向你要的网站）。完整说明见 [`docs/VPN_INTEGRATION.md`](VPN_INTEGRATION.md)。
 
 ### 2.1 如果装上了却打不开
 
@@ -471,9 +471,9 @@ adb logcat | grep com.lumobrowser                 # macOS / Linux
 - **安全模式启动**：进入应用前把环境动效与广告屏蔽全部关掉（动画强度 `0`、预设 `Minimal`、光斑与简化效果关闭、广告屏蔽关闭），**不写回你的设置**——用来判断问题是不是出在某个可关掉的特性上。
 - **正常启动**：照常进入应用。
 
-上面那些内容也能**复制**或**分享**出来，所以即使这台手机不方便连电脑，也能把报告发出去。细节见 [`docs/CRASH_RECOVERY.md`](docs/CRASH_RECOVERY.md)。
+上面那些内容也能**复制**或**分享**出来，所以即使这台手机不方便连电脑，也能把报告发出去。细节见 [`docs/CRASH_RECOVERY.md`](CRASH_RECOVERY.md)。
 
-**如果连说明页都没出现**（即崩溃发生在 `Application.onCreate` 装处理器之前、或进程被系统直接杀掉、或是原生库崩溃），那么这一版能提供的就只有：换用 `dist/LumoBrowser-v1.08-release.apk` 排除「ROM 拦截 debuggable 应用」这一条，以及上面这条 `logcat` 路径。**我不会声称这次一定修好了**——本机没有能复现那台手机的设备，也没有它的日志（[`docs/TESTING.md`](docs/TESTING.md) §0G.7 把它列为「必须由真机回答」的一条）。历史上逐条排查过的「装得上但打不开」成因（启动即崩的 `LocalLumoExtra`、数据库迁移缺失、ABI 缺失、原生库未对齐、签名无效、launcher Activity 未导出）见 [第 14 节](#14-装上了却打不开逐条排除记录)，构建侧证据见 [`docs/RELEASE-1.02.md`](docs/RELEASE-1.02.md) 第八、九节。
+**如果连说明页都没出现**（即崩溃发生在 `Application.onCreate` 装处理器之前、或进程被系统直接杀掉、或是原生库崩溃），那么这一版能提供的就只有：换用 `dist/LumoBrowser-v1.08-release.apk` 排除「ROM 拦截 debuggable 应用」这一条，以及上面这条 `logcat` 路径。**我不会声称这次一定修好了**——本机没有能复现那台手机的设备，也没有它的日志（[`docs/TESTING.md`](TESTING.md) §0G.7 把它列为「必须由真机回答」的一条）。历史上逐条排查过的「装得上但打不开」成因（启动即崩的 `LocalLumoExtra`、数据库迁移缺失、ABI 缺失、原生库未对齐、签名无效、launcher Activity 未导出）见 [第 14 节](#14-装上了却打不开逐条排除记录)，构建侧证据见 [`docs/RELEASE-1.02.md`](RELEASE-1.02.md) 第八、九节。
 
 ---
 
@@ -612,8 +612,8 @@ WebView 是这类应用最大的攻击面，本项目的取值都偏向保守：
 
 ## 6. 已知限制
 
-- **仅 Debug 签名**：没有配置 Release 签名密钥，因此只交付了 Debug APK。Debug 签名不能用于正式分发，Release 签名的配置步骤见 [`docs/BUILD.md`](docs/BUILD.md)。
-- **未在真机/模拟器上跑过自动化测试**：本机没有 Android 模拟器（`emulator` 与 `system-images` 均未安装）也没有连接设备，所以 `connectedDebugAndroidTest` 与 `adb install` 未执行。为了不让这条盲区继续掩盖问题，本轮新增了两个**在 JVM 上真正启动 `MainActivity`、真正点击按钮、真正读写 Room/DataStore** 的冒烟测试类（共 18 例），启动路径与五条核心流程现在都有自动化覆盖。详见 [`docs/TESTING.md`](docs/TESTING.md) 第 2.2 与 4.3 节。
+- **仅 Debug 签名**：没有配置 Release 签名密钥，因此只交付了 Debug APK。Debug 签名不能用于正式分发，Release 签名的配置步骤见 [`docs/BUILD.md`](BUILD.md)。
+- **未在真机/模拟器上跑过自动化测试**：本机没有 Android 模拟器（`emulator` 与 `system-images` 均未安装）也没有连接设备，所以 `connectedDebugAndroidTest` 与 `adb install` 未执行。为了不让这条盲区继续掩盖问题，本轮新增了两个**在 JVM 上真正启动 `MainActivity`、真正点击按钮、真正读写 Room/DataStore** 的冒烟测试类（共 18 例），启动路径与五条核心流程现在都有自动化覆盖。详见 [`docs/TESTING.md`](TESTING.md) 第 2.2 与 4.3 节。
 - **无多标签页**：`target="_blank"` 的新窗口在同一个 WebView 中打开，没有标签管理器。
 - **无广告拦截、无阅读模式、无下载管理**：不在本次需求范围内。
 - **favicon 依赖第三方**：`icons.duckduckgo.com`，离线或被墙时回落到按域名生成的稳定首字母占位色块（不会出现空白框）。
@@ -677,7 +677,7 @@ Kotlin 编译 0 error、0 warning
 ### 7.6 写这个回归测试时踩到的两个坑（供维护参考）
 
 - **`ShadowLooper.idle()` 在有无限动画时永不返回**：主屏背景光斑是无限动画，每跑一帧就重排下一帧，队列永远不为空，`idle()` 于是自旋到 `OutOfMemoryError`。Compose 自己的测试规则知道"判断空闲时要忽略无限动画"，裸的 looper pump 不知道。改用 `idleFor(Duration)` 按有界虚拟时间推进。
-- **`Activity.recreate()` 在 Robolectric 下会把 Compose Activity 撑爆**：本想加一个"强制重建一次、确认计数器真的看得见"的正向对照测试，结果测试 JVM 直接 OOM。该对照已删除；因此本测试**只声称**基线启动恰好创建 1 个 Activity、且任何后续创建都会被同一个 `onActivityCreated` 回调计到，**不声称**已观察到一次强制重建。同一说明也写在 [`docs/TESTING.md`](docs/TESTING.md) 里。
+- **`Activity.recreate()` 在 Robolectric 下会把 Compose Activity 撑爆**：本想加一个"强制重建一次、确认计数器真的看得见"的正向对照测试，结果测试 JVM 直接 OOM。该对照已删除；因此本测试**只声称**基线启动恰好创建 1 个 Activity、且任何后续创建都会被同一个 `onActivityCreated` 回调计到，**不声称**已观察到一次强制重建。同一说明也写在 [`docs/TESTING.md`](TESTING.md) 里。
 
 ## 8. 第二轮：性能与交互修复（卡顿 / 按键没反馈 / 不灵敏）
 
@@ -757,11 +757,11 @@ BUILD SUCCESSFUL in 3m 35s        Kotlin 编译 0 error、0 warning
 | 交付的源码包是否自足 | 把 `dist/LumoBrowser-source.zip` 解压到一个**空目录**、只补一个 `local.properties`，重新跑上面那条冷构建命令 | ✅ 独立构建通过，147 用例全绿——证明包里确实不缺文件 |
 | APK 是不是一个真实可安装的包 | `aapt2 dump badging` 读清单 | ✅ 包名 `com.lumobrowser.app.debug`、可启动 Activity `com.lumobrowser.app.MainActivity`、`minSdk 26`、`targetSdk 34`、**三个权限**（INTERNET / ACCESS_NETWORK_STATE / VIBRATE）、四种 ABI |
 | APK 的签名是否有效 | `apksigner verify --verbose --print-certs` | ✅ `Verifies`；**APK Signature Scheme v2** 通过，签名者 `CN=Android Debug`（**Debug 签名，不是发布签名**） |
-| 交付物哈希是否与实际文件一致 | `Get-FileHash -Algorithm SHA256` 重新计算并与 [`dist/SHA256SUMS.txt`](dist/SHA256SUMS.txt) 比对 | ✅ 一致（APK `e9a0eee2…`） |
+| 交付物哈希是否与实际文件一致 | `Get-FileHash -Algorithm SHA256` 重新计算并与 [`dist/SHA256SUMS.txt`](../CHANGELOG.md) 比对 | ✅ 一致（APK `e9a0eee2…`） |
 
 **没有验证的（不要当成已验证）**：`connectedDebugAndroidTest`（需要设备）、真机安装与手动走查、WebView 的真实网页加载与渲染、**动效流畅度与帧率**、**触摸命中率**、滚动时确实不出声不振动。
 
-本轮修的 20 个问题里，第 12–20 项（写盘频率、对象复用、主线程 I/O、接线缺失）是**代码层面可判定的**；但第 1–11 项改善的是"每帧要做多少工作"和"手指能不能点中"，这类改动**只能靠设备上的帧率与命中实测来确认收益**，我这边没有设备，所以只能说：**成因是确定的（代码就在那里），修复方向是标准的 Compose 做法，但实际提升了多少帧、命中率变成多少，本轮没有测量**。本机既没有模拟器也没有连接设备，这些**一律没有执行**，[`docs/TESTING.md`](docs/TESTING.md) 第 4 节逐条列出了原因与建议的补充验证清单。
+本轮修的 20 个问题里，第 12–20 项（写盘频率、对象复用、主线程 I/O、接线缺失）是**代码层面可判定的**；但第 1–11 项改善的是"每帧要做多少工作"和"手指能不能点中"，这类改动**只能靠设备上的帧率与命中实测来确认收益**，我这边没有设备，所以只能说：**成因是确定的（代码就在那里），修复方向是标准的 Compose 做法，但实际提升了多少帧、命中率变成多少，本轮没有测量**。本机既没有模拟器也没有连接设备，这些**一律没有执行**，[`docs/TESTING.md`](TESTING.md) 第 4 节逐条列出了原因与建议的补充验证清单。
 
 ---
 
@@ -861,7 +861,7 @@ Room `version` **1 → 2**，配 `MIGRATION_1_2`（逐列 `ALTER TABLE ADD COLUM
 | 交付的源码包是否自足 | 把 `dist/LumoBrowser-v2-source.zip` 解压到**空目录** `D:\LumoBrowser-v2-zip-verify`、只补一个 `local.properties`，重跑冷构建 | ✅ `BUILD SUCCESSFUL in 5m 29s`、零 error 零 warning、**223 用例全绿**、产出的 APK 与工作树构建的**字节数完全相同**（18,298,055） |
 | APK 是不是一个真实可安装的包 | `aapt2 dump badging` 读清单 | ✅ 包名 `com.lumobrowser.app.debug`、`versionCode='3'` / `versionName='1.02-debug'`、可启动 Activity `com.lumobrowser.app.MainActivity`、`minSdk 26` / `targetSdk 34`、**三个权限**、四种 ABI |
 | APK 的签名是否有效 | `apksigner verify --verbose --print-certs` | ✅ v2 方案通过（v1/v3/v3.1/v4 均 false），签名者 `CN=Android Debug`（**Debug 签名，不是发布签名**） |
-| 交付物哈希是否与实际文件一致 | `Get-FileHash -Algorithm SHA256` 重新计算并与 [`dist/SHA256SUMS.txt`](dist/SHA256SUMS.txt) 比对 | ✅ 一致 |
+| 交付物哈希是否与实际文件一致 | `Get-FileHash -Algorithm SHA256` 重新计算并与 [`dist/SHA256SUMS.txt`](../CHANGELOG.md) 比对 | ✅ 一致 |
 
 **没有验证的（不要当成已验证）**：`connectedDebugAndroidTest`（本机无模拟器、无真机）、真机安装与手动走查、WebView 的真实网页加载与渲染、**动效流畅度与帧率**、**触摸命中率**、滚动时确实不出声不振动、四种浏览模式在真实网站上的实际效果差异。
 
@@ -871,7 +871,7 @@ Room `version` **1 → 2**，配 `MIGRATION_1_2`（逐列 `ALTER TABLE ADD COLUM
 
 ## 12. 第五轮：状态栏遮挡、性能开关、网络与 VPN 辅助、数据库 v3
 
-版本号**不变**（仍是 1.02 / `versionCode 3`）——这一轮修的是同一个版本里的缺陷，不是新特性。逐条细节、行号与取舍理由见 [`docs/RELEASE-1.02.md`](docs/RELEASE-1.02.md)。
+版本号**不变**（仍是 1.02 / `versionCode 3`）——这一轮修的是同一个版本里的缺陷，不是新特性。逐条细节、行号与取舍理由见 [`docs/RELEASE-1.02.md`](RELEASE-1.02.md)。
 
 ### 12.1 状态栏遮挡：两层根因，缺一层都修不好
 
@@ -961,7 +961,7 @@ com.lumobrowser.app.LanguageSwitchLaunchTest > launchWithAlreadyAppliedLanguage_
 
 这条的教训比修法本身重要：**一个会因为构建机负载而随机变红的测试集，它证明的东西比报告上写的少。** 报告写「263 例 0 失败」，但那份绿如果是「当时机器比较闲」的绿，它就没有看上去那么值钱。
 
-完整实测表、与源码树那次构建的**逐条目差异追溯**（同为 491 条目，只有 `classes7.dex` 差 428 B，差额来自 `BuildConfig.BUILD_TIME`），以及"文档改动没有破坏这次验证"的**全树逐文件哈希比对**（排除 `.md` 后差异为 **0** 个文件），都记在 [`docs/RELEASE-1.02.md`](docs/RELEASE-1.02.md) 第八节。
+完整实测表、与源码树那次构建的**逐条目差异追溯**（同为 491 条目，只有 `classes7.dex` 差 428 B，差额来自 `BuildConfig.BUILD_TIME`），以及"文档改动没有破坏这次验证"的**全树逐文件哈希比对**（排除 `.md` 后差异为 **0** 个文件），都记在 [`docs/RELEASE-1.02.md`](RELEASE-1.02.md) 第八节。
 
 **这次验证没有覆盖什么**：没有在设备上安装过（本机 `adb devices` 为空，无真机/模拟器/AVD/系统映像），`app-debug-androidTest.apk` 只编译未运行，未验证 release 变体（无 keystore）。
 
@@ -971,7 +971,7 @@ com.lumobrowser.app.LanguageSwitchLaunchTest > launchWithAlreadyAppliedLanguage_
 
 这条来自真实反馈（用户的手机上「安装了，打不开」）。**本机没有任何设备，所以我没有复现过、也没有验证过任何修复**——这一节能提供的是「已经排除了哪些成因」和「怎么把现场变成一段可读的文字」，而不是「已经修好了」。
 
-> **1.07 的回答。** 表格里的成因在用户那台 Android 14/15 手机上**一条都不成立**，而 1.07 也没能找出新的根因（排查过程见文首 1.07 公告第一节）。所以这一版换了一条路：不再试图猜中那个崩溃，而是让**崩溃自己说话**——异常被记录下来，**下一次启动先显示报告**（含内存页大小、WebView 提供方版本、是否 debuggable），并给出「安全模式启动」与「正常启动」两个入口，另外提供一个**不可调试的 Release 包**来排除 ROM 拦截。三条入口见 [第 2.2 节](#22-如果-107-还是打不开)，完整设计见 [`docs/CRASH_RECOVERY.md`](docs/CRASH_RECOVERY.md)。
+> **1.07 的回答。** 表格里的成因在用户那台 Android 14/15 手机上**一条都不成立**，而 1.07 也没能找出新的根因（排查过程见文首 1.07 公告第一节）。所以这一版换了一条路：不再试图猜中那个崩溃，而是让**崩溃自己说话**——异常被记录下来，**下一次启动先显示报告**（含内存页大小、WebView 提供方版本、是否 debuggable），并给出「安全模式启动」与「正常启动」两个入口，另外提供一个**不可调试的 Release 包**来排除 ROM 拦截。三条入口见 [第 2.2 节](#22-如果-107-还是打不开)，完整设计见 [`docs/CRASH_RECOVERY.md`](CRASH_RECOVERY.md)。
 
 取证命令（`adb logcat -b crash` 那几步、以及只有手机时怎么办）在 [第 2.1 节](#21-如果装上了却打不开)，不在这里重复。下面是**逐条排查过的成因**，每一条都写了怎么查的——这些是查过的，不是在推测：
 
@@ -1059,7 +1059,7 @@ com.lumobrowser.app.LanguageSwitchLaunchTest > launchWithAlreadyAppliedLanguage_
 **修掉的最大缺口**：19 种事件此前**只有 12 种真的会响**——`LoadStart` / `LoadSuccess` / `LoadFailure` / `VpnConnecting` / `VpnConnected` / `VpnFailed` / `LaunchEnd` / `Navigate` / `DialogOpen` / `DialogClose` / `Press` / `Release` 全都没有调用点。现在全部接上。两处刻意的例外：
 
 - **`Press` 响、`Release` 只在按下被取消时响**。一次提交的点击会在几十毫秒后产生自己的结果音，再补一个"松开"音就是一次操作三声——那正是规格 3.5 禁止的堆叠。而被取消的按下恰恰是唯一"不会有好结果音"的时刻，也正是用户需要听到"没发生"的时刻。
-- **`SettingsSaved` 是唯一没有调用点的事件，且决定不补**。本应用设置**即时生效**、根本没有"保存"按钮；每个控件的提交都已经产生更具体的音（开关是 `Toggle`、动作列是 `Click`、恢复默认是 `Confirm`），再叠一个就是一次操作两声。素材和 cue 都在（设置页可以试听），缺的只是一个不重复的表达时机。**这一条列在 [`docs/AUDIO_ASSETS.md`](docs/AUDIO_ASSETS.md) 与 [`docs/TESTING.md`](docs/TESTING.md) 的未实现清单里。**
+- **`SettingsSaved` 是唯一没有调用点的事件，且决定不补**。本应用设置**即时生效**、根本没有"保存"按钮；每个控件的提交都已经产生更具体的音（开关是 `Toggle`、动作列是 `Click`、恢复默认是 `Confirm`），再叠一个就是一次操作两声。素材和 cue 都在（设置页可以试听），缺的只是一个不重复的表达时机。**这一条列在 [`docs/AUDIO_ASSETS.md`](AUDIO_ASSETS.md) 与 [`docs/TESTING.md`](TESTING.md) 的未实现清单里。**
 
 ### 15.3 按钮：根因逐条定位，没有"统一设 shadow = 0"
 
@@ -1105,7 +1105,7 @@ VPN 集成测试**第一次运行就红了 3 例，三例全是产品代码的 b
 - **APK 实际构建成功**：`BUILD SUCCESSFUL in 41s` → `dist/LumoBrowser-2.2-debug.apk`，19,154,932 字节，`versionCode=4` / `versionName=2.2-debug`；`apksigner verify` v2 方案通过（`CN=Android Debug`）；`aapt2 dump badging` 确认四种 ABI 齐全。
 - **APK 内容实测**：资源表 `res/raw/` 下 76 个 `.wav`；`classes.dex` 里含 `vpn/LumoVpnService`、`vpn/VpnController`、`vpn/VpnProfileCodec`、`vpn/VpnAppDirectory`、`ui/components/StartupAnimationKt`、`feedback/SoundSynth`、`feedback/SoundLibrary`——**证明这个包确实含有本轮的四项工作**，而不只是声称含有。
 - **音效素材验证 `problems: 0`**：76 档 / 668,268 字节 / 峰值 0.4315–0.7200，四种风格的泛音内容确有可量测的区分度（`hf_ratio` 均值 deep 0.137 < soft 0.244 < crisp 0.335 < glass 0.650）。
-- **二十条验收标准的逐条判定**在 [`docs/TESTING.md`](docs/TESTING.md) §0B：**9 条已通过、10 条部分通过、1 条未通过（无障碍，本版明确不做）、0 条被谎报为通过**。
+- **二十条验收标准的逐条判定**在 [`docs/TESTING.md`](TESTING.md) §0B：**9 条已通过、10 条部分通过、1 条未通过（无障碍，本版明确不做）、0 条被谎报为通过**。
 
 ### 15.8 明确没有做的
 
@@ -1116,10 +1116,10 @@ VPN 集成测试**第一次运行就红了 3 例，三例全是产品代码的 b
 | ~~**无障碍服务**~~ | ~~规格允许"无法安全实现时如实说明"~~ → **1.03 已实现**，见第 16 节。当时写下的五条约束逐条照做 |
 | **按钮的"载入中 / 成功 / 失败"三态视觉** | 目前只有 `enabled` / `disabled` 两态 |
 | **页面切换残影、滚动位置保留、加载可取消** | 规格第六节的细节打磨项，本轮未做完 |
-| **源码包冷构建二次验证** | 1.02 做过（`D:\LumoBrowser-102-coldbuild3`），**2.2 与 1.03 都没有重做**。这一条明确记在 [`docs/TESTING.md`](docs/TESTING.md) 里，没有当成做过 |
+| **源码包冷构建二次验证** | 1.02 做过（`D:\LumoBrowser-102-coldbuild3`），**2.2 与 1.03 都没有重做**。这一条明确记在 [`docs/TESTING.md`](TESTING.md) 里，没有当成做过 |
 | **真机安装与启动验证** | 本机无设备、无模拟器、无 AVD。`adb devices -l` 只有表头 |
 
-**「部分通过」的 10 条全部是同一个原因：需要一台设备。** 它们不是"大概可以"，而是"机制已实现且有测试钉住，最后一段只能由设备证实"——各自需要什么写在 [`docs/TESTING.md`](docs/TESTING.md) 第 4 节。
+**「部分通过」的 10 条全部是同一个原因：需要一台设备。** 它们不是"大概可以"，而是"机制已实现且有测试钉住，最后一段只能由设备证实"——各自需要什么写在 [`docs/TESTING.md`](TESTING.md) 第 4 节。
 
 ---
 

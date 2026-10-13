@@ -2004,7 +2004,7 @@ apksigner: v2 true，证书 CN=LumoBrowser, OU=Personal, O=LumoBrowser, L=Unknow
 （源码包的哈希同样登记在这个文件里，但**不在这里复述**）
 ```
 
-> **源码包的字节数与 SHA-256 故意不写进本文档**：`docs/TESTING.md` 自己就在源码包内，写进去会**自我指涉**——每次改这句话都会改变压缩包，从而让刚写下的哈希立刻作废。所以**唯一权威的哈希清单是压缩包之外的 [`dist/SHA256SUMS.txt`](../dist/SHA256SUMS.txt)**（这也是 README 第 1 节的同一约定）。本文档只保证：那个 zip 是**在本文档最后一次修改之后**才打包的，因此它里面装的就是当前这份文档。
+> **源码包的字节数与 SHA-256 故意不写进本文档**：`docs/TESTING.md` 自己就在源码包内，写进去会**自我指涉**——每次改这句话都会改变压缩包，从而让刚写下的哈希立刻作废。所以**唯一权威的哈希清单是压缩包之外的 [`dist/SHA256SUMS.txt`](../CHANGELOG.md)**（这也是 README 第 1 节的同一约定）。本文档只保证：那个 zip 是**在本文档最后一次修改之后**才打包的，因此它里面装的就是当前这份文档。
 
 源码包 **267 个条目**（1.06 为 239 档），由 `tools/package_source.ps1` 的 allowlist 生成；已核对包内**不含** `build/`、`dist/`、临时日志与 APK，且**含** 4 个 `crash/` 源文件、4 个 `crash/` 测试类、`app/src/main/assets/adblock/rules.txt`、`keystore/`（2 档）与 32 个 `docs/` 条目。打包后逐条比对过 5 份文档在包内与磁盘上的字节数完全一致（`README.md`、`CHANGELOG.md`、`docs/TESTING.md`、`docs/BUILD.md`、`docs/build-logs/README.md`）——**这句不写具体数字，理由同上**。
 
@@ -2093,7 +2093,7 @@ TESTS_EXIT=0
 
 `dist/LumoBrowser-v1.06-source.zip`，**239 个文件**（1.05 是 236）；含 76 个音效素材、14 份构建日志、三份 1.06 新文档（[`EXTERNAL_BROWSER_POLICY.md`](EXTERNAL_BROWSER_POLICY.md)、[`WEB_NAVIGATION.md`](WEB_NAVIGATION.md) 的 1.06 修订版与本文档）。
 
-**压缩包的字节数与 SHA-256 都不写在这里**——本文件本身就在压缩包内，写进去会自我指涉、永远对不上（这一条是 1.05 那一轮用一次真实的过期数字换来的，见 §7.1）。精确值统一公布在压缩包之外的 [`dist/SHA256SUMS.txt`](../dist/SHA256SUMS.txt)。
+**压缩包的字节数与 SHA-256 都不写在这里**——本文件本身就在压缩包内，写进去会自我指涉、永远对不上（这一条是 1.05 那一轮用一次真实的过期数字换来的，见 §7.1）。精确值统一公布在压缩包之外的 [`dist/SHA256SUMS.txt`](../CHANGELOG.md)。
 
 ### 7.1 1.05（上一版，versionCode 7）
 
@@ -2174,7 +2174,7 @@ TESTS_EXIT=0
 
 #### 源码包
 
-`dist/LumoBrowser-v1.05-source.zip`，**236 个文件**（1.04 是 226）；含 76 个音效素材、12 份构建日志、三份 1.05 新文档。**压缩包的字节数与 SHA-256 都不写在这里**——本文件本身就在压缩包内，写进去会自我指涉、永远对不上。（这一节的第一稿确实写了字节数，随后 README 与本文档本身又改了两轮、重新打包，那个数字当场就过期了，正好把这个道理演示了一遍。）精确值统一公布在压缩包之外的 [`dist/SHA256SUMS.txt`](../dist/SHA256SUMS.txt)。
+`dist/LumoBrowser-v1.05-source.zip`，**236 个文件**（1.04 是 226）；含 76 个音效素材、12 份构建日志、三份 1.05 新文档。**压缩包的字节数与 SHA-256 都不写在这里**——本文件本身就在压缩包内，写进去会自我指涉、永远对不上。（这一节的第一稿确实写了字节数，随后 README 与本文档本身又改了两轮、重新打包，那个数字当场就过期了，正好把这个道理演示了一遍。）精确值统一公布在压缩包之外的 [`dist/SHA256SUMS.txt`](../CHANGELOG.md)。
 
 ### 7.2 1.04（versionCode 6）
 
@@ -2231,7 +2231,7 @@ The current default is 'false'. It will be removed in version 9.0 of the Android
 | 内含构建日志 | `docs/build-logs/` 下 2 份新版 + 8 份留档 |
 | 排除 | `build/`、`.gradle/`、`.kotlin/`、`.idea/`、`dist/`、`local.properties`，以及 `.txt`/`.apk`/`.aar`/`.log`/`.zip`/`.iml` 等（`docs/build-logs/` 下的 `.txt` 例外保留） |
 
-**这个压缩包的精确字节数与 SHA-256 不写在本文件里**——本文件自己就在压缩包里，写进去会自我指涉、永远对不上。精确哈希统一公布在压缩包之外的 [`dist/SHA256SUMS.txt`](../dist/SHA256SUMS.txt)。
+**这个压缩包的精确字节数与 SHA-256 不写在本文件里**——本文件自己就在压缩包里，写进去会自我指涉、永远对不上。精确哈希统一公布在压缩包之外的 [`dist/SHA256SUMS.txt`](../CHANGELOG.md)。
 
 #### 三语言字符串
 
